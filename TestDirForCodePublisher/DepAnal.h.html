@@ -1,0 +1,91 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<link href=1.StyleSheet.css rel="stylesheet" type="text/css"/> 
+<script  type="text/javascript" src=2.JavaScript.js></script></head> 
+<body> 
+<div id="titleHeader"> 
+<h1>Code Files with Dependencies</h1><div id="menuBar"> 
+<h3> Dependencies </h3><a href = "ActionsAndRules.h.html">ActionsAndRules.h</a><br/></div> 
+<pre id="matter">
+#pragma once
+/////////////////////////////////////////////////////////////////////////
+// DepAnal.h - Demonstrate how to start developing dependency analyzer //
+//                                                                     //
+// Jim Fawcett, CSE687 - Object Oriented Design, Spring 2017           //
+/////////////////////////////////////////////////////////////////////////
+/*
+ * You need to provide all the manual and maintenance informnation
+ */
+
+#include "../Parser/ActionsAndRules.h"
+#include &lt;iostream&gt;
+#include &lt;functional&gt;
+
+#pragma warning (disable : 4101)  // disable warning re unused variable x, below
+
+namespace CodeAnalysis
+<button class="buttonClass" id="btn1" onclick="expandAndCollapse(1, id)">-</button><div class="buttonClass" id="1">{
+  class TypeAnal
+  <button class="buttonClass" id="btn12" onclick="expandAndCollapse(12, id)">-</button><div class="buttonClass" id="12">{
+  public:
+    using SPtr = std::shared_ptr&lt;ASTNode*&gt;;
+
+    TypeAnal();
+    void doTypeAnal();
+  private:
+    void DFS(ASTNode* pNode);
+    AbstrSynTree&amp; ASTref_;
+    ScopeStack&lt;ASTNode*&gt; scopeStack_;
+    Scanner::Toker&amp; toker_;
+  }</div>;
+
+  inline TypeAnal::TypeAnal() : 
+    ASTref_(Repository::getInstance()-&gt;AST()),
+    scopeStack_(Repository::getInstance()-&gt;scopeStack()),
+    toker_(*(Repository::getInstance()-&gt;Toker()))
+  <button class="buttonClass" id="btn123" onclick="expandAndCollapse(123, id)">-</button><div class="buttonClass" id="123">{
+    std::function&lt;void()&gt; test = [] <button class="buttonClass" id="btn1234" onclick="expandAndCollapse(1234, id)">-</button><div class="buttonClass" id="1234">{ int x; }</div>;  // This is here to test detection of lambdas.
+  }</div>                                              // It doesn't do anything useful for dep anal.
+
+  inline bool doDisplay(ASTNode* pNode)
+  <button class="buttonClass" id="btn12345" onclick="expandAndCollapse(12345, id)">-</button><div class="buttonClass" id="12345">{
+    static std::string toDisplay[] = <button class="buttonClass" id="btn123456" onclick="expandAndCollapse(123456, id)">-</button><div class="buttonClass" id="123456">{
+      "function", "lambda", "class", "struct", "enum", "alias", "typedef"
+    }</div>;
+    for (std::string type : toDisplay)
+    <button class="buttonClass" id="btn1234567" onclick="expandAndCollapse(1234567, id)">-</button><div class="buttonClass" id="1234567">{
+      if (pNode-&gt;type_ == type)
+        return true;
+    }</div>
+    return false;
+  }</div>
+  inline void TypeAnal::DFS(ASTNode* pNode)
+  <button class="buttonClass" id="btn12345678" onclick="expandAndCollapse(12345678, id)">-</button><div class="buttonClass" id="12345678">{
+    static std::string path = "";
+    if (pNode-&gt;path_ != path)
+    <button class="buttonClass" id="btn123456789" onclick="expandAndCollapse(123456789, id)">-</button><div class="buttonClass" id="123456789">{
+      std::cout &lt;&lt; "\n    -- " &lt;&lt; pNode-&gt;path_ &lt;&lt; "\\" &lt;&lt; pNode-&gt;package_;
+      path = pNode-&gt;path_;
+    }</div>
+    if (doDisplay(pNode))
+    <button class="buttonClass" id="btn12345678910" onclick="expandAndCollapse(12345678910, id)">-</button><div class="buttonClass" id="12345678910">{
+      std::cout &lt;&lt; "\n  " &lt;&lt; pNode-&gt;name_;
+      std::cout &lt;&lt; ", " &lt;&lt; pNode-&gt;type_;
+    }</div>
+    for (auto pChild : pNode-&gt;children_)
+      DFS(pChild);
+  }</div>
+
+  inline void TypeAnal::doTypeAnal()
+  <button class="buttonClass" id="btn1234567891011" onclick="expandAndCollapse(1234567891011, id)">-</button><div class="buttonClass" id="1234567891011">{
+    std::cout &lt;&lt; "\n  starting type analysis:\n";
+    std::cout &lt;&lt; "\n  scanning AST and displaying important things:";
+    std::cout &lt;&lt; "\n -----------------------------------------------";
+    ASTNode* pRoot = ASTref_.root();
+    DFS(pRoot);
+    //std::cout &lt;&lt; "\n\n  the rest is for you to complete\n";
+  }</div>
+}</div>}</div></pre>
+</body> 
+</html> 

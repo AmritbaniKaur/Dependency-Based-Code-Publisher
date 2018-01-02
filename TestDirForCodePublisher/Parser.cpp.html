@@ -1,0 +1,159 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<link href=1.StyleSheet.css rel="stylesheet" type="text/css"/> 
+<script  type="text/javascript" src=2.JavaScript.js></script></head> 
+<body> 
+<div id="titleHeader"> 
+<h1>Code Files with Dependencies</h1><div id="menuBar"> 
+<h3> Dependencies </h3><a href = "Utilities.h.html">Utilities.h</a><br/><a href = "Tokenizer.h.html">Tokenizer.h</a><br/><a href = "SemiExp.h.html">SemiExp.h</a><br/><a href = "Parser.h.html">Parser.h</a><br/><a href = "ActionsAndRules.h.html">ActionsAndRules.h</a><br/><a href = "ConfigureParser.h.html">ConfigureParser.h</a><br/><a href = "FileSystem.h.html">FileSystem.h</a><br/></div> 
+<pre id="matter">
+/////////////////////////////////////////////////////////////////////
+//  Parser.cpp - Analyzes C++ language constructs                  //
+//  ver 1.5                                                        //
+//  Language:      Visual C++ 2008, SP1                            //
+//  Platform:      Dell XPS 8900, Windows 10                       //
+//  Application:   Prototype for CSE687 Pr1, Sp09, ...             //
+//  Author:        Jim Fawcett, CST 4-187, Syracuse University     //
+//                 (315) 443-3948, jfawcett@twcny.rr.com           //
+/////////////////////////////////////////////////////////////////////
+
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+#include "../Utilities/Utilities.h"
+#include "../Tokenizer/Tokenizer.h"
+#include "../SemiExp/SemiExp.h"
+#include "Parser.h"
+#include "ActionsAndRules.h"
+#include "ConfigureParser.h"
+
+using namespace CodeAnalysis;
+using namespace Scanner;
+using namespace Utilities;
+using Demo = Logging::StaticLogger&lt;1&gt;;
+
+//----&lt; register parsing rule &gt;--------------------------------
+
+void Parser::addRule(IRule* pRule)
+<button class="buttonClass" id="btn1" onclick="expandAndCollapse(1, id)">-</button><div class="buttonClass" id="1">{
+  rules.push_back(pRule);
+}</div>
+//----&lt; get next ITokCollection &gt;------------------------------
+
+bool Parser::next() 
+<button class="buttonClass" id="btn12" onclick="expandAndCollapse(12, id)">-</button><div class="buttonClass" id="12">{ 
+  bool succeeded = pTokColl-&gt;get();
+
+  if (!succeeded)
+  <button class="buttonClass" id="btn123" onclick="expandAndCollapse(123, id)">-</button><div class="buttonClass" id="123">{
+    return false;
+  }</div>
+  std::string debug = pTokColl-&gt;show();
+  //GrammarHelper::showParseDemo("get SemiExp: ", *pTokColl);
+
+  pTokColl-&gt;trim();
+
+  return true;
+}</div>
+
+//----&lt; parse the SemiExp by applying all rules to it &gt;--------
+
+bool Parser::parse()
+<button class="buttonClass" id="btn1234" onclick="expandAndCollapse(1234, id)">-</button><div class="buttonClass" id="1234">{
+  for (size_t i = 0; i&lt;rules.size(); ++i)
+  <button class="buttonClass" id="btn12345" onclick="expandAndCollapse(12345, id)">-</button><div class="buttonClass" id="12345">{
+    std::string debug = pTokColl-&gt;show();
+
+    bool doWhat = rules[i]-&gt;doTest(pTokColl);
+    if (doWhat == IRule::Stop)
+      break;
+  }</div>
+  return true;
+}</div>
+//----&lt; register action with a rule &gt;--------------------------
+
+void IRule::addAction(IAction *pAction)
+<button class="buttonClass" id="btn123456" onclick="expandAndCollapse(123456, id)">-</button><div class="buttonClass" id="123456">{
+  actions.push_back(pAction);
+}</div>
+//----&lt; invoke all actions associated with a rule &gt;------------
+
+void IRule::doActions(const ITokCollection* pTokColl)
+<button class="buttonClass" id="btn1234567" onclick="expandAndCollapse(1234567, id)">-</button><div class="buttonClass" id="1234567">{
+  if(actions.size() &gt; 0)
+    for(size_t i=0; i&lt;actions.size(); ++i)
+      actions[i]-&gt;doAction(pTokColl);
+}</div>
+
+//----&lt; test stub &gt;--------------------------------------------
+
+#include "../FileSystem/FileSystem.h"
+
+#ifdef TEST_PARSER
+
+#include &lt;queue&gt;
+#include &lt;string&gt;
+#define Util StringHelper
+
+int main(int argc, char* argv[])
+<button class="buttonClass" id="btn12345678" onclick="expandAndCollapse(12345678, id)">-</button><div class="buttonClass" id="12345678">{
+  Util::Title("Testing Parser Class");
+  putline();
+
+  // collecting tokens from files, named on the command line
+
+  if(argc &lt; 2)
+  <button class="buttonClass" id="btn123456789" onclick="expandAndCollapse(123456789, id)">-</button><div class="buttonClass" id="123456789">{
+    std::cout 
+      &lt;&lt; "\n  please enter name of file to process on command line\n\n";
+    return 1;
+  }</div>
+
+  for(int i=1; i&lt;argc; ++i)
+  <button class="buttonClass" id="btn12345678910" onclick="expandAndCollapse(12345678910, id)">-</button><div class="buttonClass" id="12345678910">{
+    std::string fileSpec = FileSystem::Path::getFullFileSpec(argv[i]);
+    std::string msg = "Processing file" + fileSpec;
+    Util::title(msg);
+    putline();
+
+    ConfigParseForCodeAnal configure;
+    Parser* pParser = configure.Build();
+    try
+    <button class="buttonClass" id="btn1234567891011" onclick="expandAndCollapse(1234567891011, id)">-</button><div class="buttonClass" id="1234567891011">{
+      if(pParser)
+      <button class="buttonClass" id="btn123456789101112" onclick="expandAndCollapse(123456789101112, id)">-</button><div class="buttonClass" id="123456789101112">{
+        if(!configure.Attach(argv[i]))
+        <button class="buttonClass" id="btn12345678910111213" onclick="expandAndCollapse(12345678910111213, id)">-</button><div class="buttonClass" id="12345678910111213">{
+          std::cout &lt;&lt; "\n  could not open file " &lt;&lt; fileSpec &lt;&lt; std::endl;
+          continue;
+        }</div>
+      }</div>
+      else
+      <button class="buttonClass" id="btn1234567891011121314" onclick="expandAndCollapse(1234567891011121314, id)">-</button><div class="buttonClass" id="1234567891011121314">{
+        std::cout &lt;&lt; "\n\n  Parser not built\n\n";
+        return 1;
+      }</div>
+      // now that parser is built, use it
+
+      while(pParser-&gt;next())
+        pParser-&gt;parse();
+      std::cout &lt;&lt; "\n";
+
+      // show AST
+      Repository* pRepo = Repository::getInstance();
+      ASTNode* pGlobalScope = pRepo-&gt;getGlobalScope();
+      TreeWalk(pGlobalScope);
+    }</div>
+    catch(std::exception&amp; ex)
+    <button class="buttonClass" id="btn123456789101112131415" onclick="expandAndCollapse(123456789101112131415, id)">-</button><div class="buttonClass" id="123456789101112131415">{
+      std::cout &lt;&lt; "\n\n    " &lt;&lt; ex.what() &lt;&lt; "\n\n";
+    }</div>
+  }</div>
+  std::cout &lt;&lt; "\n";
+}</div>
+
+#endif
+
+</pre>
+</body> 
+</html> 

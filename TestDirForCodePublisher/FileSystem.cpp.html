@@ -1,0 +1,1225 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<link href=1.StyleSheet.css rel="stylesheet" type="text/css"/> 
+<script  type="text/javascript" src=2.JavaScript.js></script></head> 
+<body> 
+<div id="titleHeader"> 
+<h1>Code Files with Dependencies</h1><div id="menuBar"> 
+<h3> Dependencies </h3><a href = "FileSystem.h.html">FileSystem.h</a><br/></div> 
+<pre id="matter">
+/////////////////////////////////////////////////////////////////////////////
+// FileSystem.cpp - Support file and directory operations                  //
+// ver 2.6                                                                 //
+// ----------------------------------------------------------------------- //
+// copyright © Jim Fawcett, 2012                                           //
+// All rights granted provided that this notice is retained                //
+// ----------------------------------------------------------------------- //
+// Language:    Visual C++, Visual Studio 2010                             //
+// Platform:    Dell XPS 8300, Core i7, Windows 7 SP1                      //
+// Application: Summer Projects, 2012                                      //
+// Author:      Jim Fawcett, CST 4-187, Syracuse University                //
+//              (315) 443-3948, jfawcett@twcny.rr.com                      //
+/////////////////////////////////////////////////////////////////////////////
+
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+#include &lt;sstream&gt;
+#include &lt;iomanip&gt;
+#include &lt;utility&gt;
+#include &lt;clocale&gt;
+#include &lt;locale&gt;
+#include "FileSystem.h"
+
+using namespace FileSystem;
+
+/////////////////////////////////////////////////////////
+// helper FileSystemSearch
+
+class FileSystemSearch
+<button class="buttonClass" id="btn1" onclick="expandAndCollapse(1, id)">-</button><div class="buttonClass" id="1">{
+public:
+  FileSystemSearch();
+  ~FileSystemSearch();
+  std::string firstFile(const std::string&amp; path=".", const std::string&amp; pattern="*.*");
+  std::string nextFile();
+  std::string firstDirectory(const std::string&amp; path=".", const std::string&amp; pattern="*.*");
+  std::string nextDirectory();
+  void close();
+private:
+  HANDLE hFindFile;
+  WIN32_FIND_DATAA FindFileData;
+  WIN32_FIND_DATAA* pFindFileData;
+}</div>;
+
+FileSystemSearch::FileSystemSearch() : pFindFileData(&amp;FindFileData) <button class="buttonClass" id="btn12" onclick="expandAndCollapse(12, id)">-</button><div class="buttonClass" id="12">{}</div>
+FileSystemSearch::~FileSystemSearch() <button class="buttonClass" id="btn123" onclick="expandAndCollapse(123, id)">-</button><div class="buttonClass" id="123">{ ::FindClose(hFindFile); }</div>
+void FileSystemSearch::close() <button class="buttonClass" id="btn1234" onclick="expandAndCollapse(1234, id)">-</button><div class="buttonClass" id="1234">{ ::FindClose(hFindFile); }</div>
+
+//----&lt; block constructor taking array iterators &gt;-------------------------
+
+Block::Block(Byte* beg, Byte* end) : bytes_(beg, end) <button class="buttonClass" id="btn12345" onclick="expandAndCollapse(12345, id)">-</button><div class="buttonClass" id="12345">{}</div>
+
+//----&lt; push back block byte &gt;---------------------------------------------
+
+void Block::push_back(Byte b)
+<button class="buttonClass" id="btn123456" onclick="expandAndCollapse(123456, id)">-</button><div class="buttonClass" id="123456">{
+  bytes_.push_back(b);
+}</div>
+//----&lt; non-const indexer &gt;------------------------------------------------
+
+Byte&amp; Block::operator[](size_t i)
+<button class="buttonClass" id="btn1234567" onclick="expandAndCollapse(1234567, id)">-</button><div class="buttonClass" id="1234567">{
+  if(i&lt;0 || bytes_.size() &lt;= i)
+    throw std::runtime_error("index out of range in Block");
+  return bytes_[i];
+}</div>
+//----&lt; const indexer &gt;----------------------------------------------------
+
+Byte Block::operator[](size_t i) const
+<button class="buttonClass" id="btn12345678" onclick="expandAndCollapse(12345678, id)">-</button><div class="buttonClass" id="12345678">{
+  if(i&lt;0 || bytes_.size() &lt;= i)
+    throw std::runtime_error("index out of range in Block");
+  return bytes_[i];
+}</div>
+//----&lt; equality comparison &gt;----------------------------------------------
+
+bool Block::operator==(const Block&amp; block) const
+<button class="buttonClass" id="btn123456789" onclick="expandAndCollapse(123456789, id)">-</button><div class="buttonClass" id="123456789">{
+  return bytes_ == block.bytes_;
+}</div>
+//----&lt; inequality comparison &gt;--------------------------------------------
+
+bool Block::operator!=(const Block&amp; block) const
+<button class="buttonClass" id="btn12345678910" onclick="expandAndCollapse(12345678910, id)">-</button><div class="buttonClass" id="12345678910">{
+  return bytes_ != block.bytes_;
+}</div>
+//----&lt; return number of bytes in block &gt;----------------------------------
+
+size_t Block::size() const
+<button class="buttonClass" id="btn1234567891011" onclick="expandAndCollapse(1234567891011, id)">-</button><div class="buttonClass" id="1234567891011">{
+  return bytes_.size();
+}</div>
+
+//----&lt; File constructor opens file stream &gt;-------------------------------
+
+File::File(const std::string&amp; filespec) 
+    : name_(filespec), pIStream(nullptr), pOStream(nullptr), dirn_(in), typ_(text), good_(true)
+<button class="buttonClass" id="btn123456789101112" onclick="expandAndCollapse(123456789101112, id)">-</button><div class="buttonClass" id="123456789101112">{
+}</div>
+//----&lt; File destructor closes file stream &gt;-------------------------------
+
+File::~File() 
+<button class="buttonClass" id="btn12345678910111213" onclick="expandAndCollapse(12345678910111213, id)">-</button><div class="buttonClass" id="12345678910111213">{ 
+  if(pIStream)
+  <button class="buttonClass" id="btn1234567891011121314" onclick="expandAndCollapse(1234567891011121314, id)">-</button><div class="buttonClass" id="1234567891011121314">{
+    pIStream-&gt;close(); 
+    delete pIStream;
+    pIStream = nullptr;
+    good_ = false;
+  }</div>
+  if(pOStream)
+  <button class="buttonClass" id="btn123456789101112131415" onclick="expandAndCollapse(123456789101112131415, id)">-</button><div class="buttonClass" id="123456789101112131415">{
+    pOStream-&gt;close();
+    delete pOStream; 
+    pOStream = nullptr;
+    good_ = false;
+  }</div>
+}</div>
+//----&lt; open for reading or writing &gt;--------------------------------------
+
+bool File::open(direction dirn, type typ)
+<button class="buttonClass" id="btn12345678910111213141516" onclick="expandAndCollapse(12345678910111213141516, id)">-</button><div class="buttonClass" id="12345678910111213141516">{
+  dirn_ = dirn;
+  typ_ = typ;
+  good_ = true;
+  if(dirn == in)
+  <button class="buttonClass" id="btn1234567891011121314151617" onclick="expandAndCollapse(1234567891011121314151617, id)">-</button><div class="buttonClass" id="1234567891011121314151617">{
+    pIStream = new std::ifstream;
+    if(typ == binary)
+      pIStream-&gt;open(name_.c_str(), std::ios::in | std::ios::binary);
+    else
+      pIStream-&gt;open(name_.c_str(), std::ios::in);
+    if (!(*pIStream).good())
+    <button class="buttonClass" id="btn123456789101112131415161718" onclick="expandAndCollapse(123456789101112131415161718, id)">-</button><div class="buttonClass" id="123456789101112131415161718">{
+      good_ = false;
+      pIStream = nullptr;
+      //throw std::runtime_error("\n  open for input failed in File constructor");
+    }</div>
+  }</div>
+  else
+  <button class="buttonClass" id="btn12345678910111213141516171819" onclick="expandAndCollapse(12345678910111213141516171819, id)">-</button><div class="buttonClass" id="12345678910111213141516171819">{
+    pOStream = new std::ofstream;
+    if(typ == binary)
+      pOStream-&gt;open(name_.c_str(), std::ios::out | std::ios::binary);
+    else
+      pOStream-&gt;open(name_.c_str(), std::ios::out);
+    if (!(*pOStream).good())
+    <button class="buttonClass" id="btn1234567891011121314151617181920" onclick="expandAndCollapse(1234567891011121314151617181920, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920">{
+      good_ = false;
+      pOStream = nullptr;
+      //throw std::runtime_error("\n  open for output failed in File constructor");
+    }</div>
+  }</div>
+  return good_;
+}</div>
+//----&lt; reads one line of a text file &gt;------------------------------------
+
+std::string File::getLine(bool keepNewLines)
+<button class="buttonClass" id="btn123456789101112131415161718192021" onclick="expandAndCollapse(123456789101112131415161718192021, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021">{
+  if(pIStream == nullptr || !pIStream-&gt;good())
+    throw std::runtime_error("input stream not open");
+  if(typ_ == binary)
+    throw std::runtime_error("getting text line from binary file");
+  if(dirn_ == out)
+    throw std::runtime_error("reading output file");
+
+  std::string store;
+  while (true)
+  <button class="buttonClass" id="btn12345678910111213141516171819202122" onclick="expandAndCollapse(12345678910111213141516171819202122, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122">{
+    char ch = pIStream-&gt;get();
+    if (!isGood())
+      return store;
+    if (ch == '\n')
+    <button class="buttonClass" id="btn1234567891011121314151617181920212223" onclick="expandAndCollapse(1234567891011121314151617181920212223, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223">{
+      if (keepNewLines)
+        store += ch;
+      return store;
+    }</div>
+    store += ch;
+  }</div>
+}</div>
+//----&lt; read all lines of text file into one string &gt;----------------------
+
+std::string File::readAll(bool keepNewLines)
+<button class="buttonClass" id="btn123456789101112131415161718192021222324" onclick="expandAndCollapse(123456789101112131415161718192021222324, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324">{
+  std::string store;
+  while (true)
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425" onclick="expandAndCollapse(12345678910111213141516171819202122232425, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425">{
+    if (!isGood())
+      return store;
+    store += getLine(keepNewLines);
+    std::locale loc;
+    if (store.size() &gt; 0 &amp;&amp; !std::isspace(store[store.size() - 1], loc))
+      store += ' ';
+  }</div>
+  return store;
+}</div>
+//----&lt; writes one line of a text to a file &gt;------------------------------
+
+void File::putLine(const std::string&amp; s, bool wantReturn)
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526" onclick="expandAndCollapse(1234567891011121314151617181920212223242526, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526">{
+  if(pOStream == nullptr || !pOStream-&gt;good())
+    throw std::runtime_error("output stream not open");
+  if(typ_ == binary)
+    throw std::runtime_error("writing text line to binary file");
+  if(dirn_ == in)
+    throw std::runtime_error("writing input file");
+  for(size_t i=0; i&lt;s.size(); ++i)
+    pOStream-&gt;put(s[i]);
+  if(wantReturn)
+    pOStream-&gt;put('\n');
+  pOStream-&gt;flush();
+}</div>
+//----&lt; reads a block of bytes from binary file &gt;--------------------------
+
+Block File::getBlock(size_t size)
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627" onclick="expandAndCollapse(123456789101112131415161718192021222324252627, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627">{
+  if(pIStream == nullptr || !pIStream-&gt;good())
+    throw std::runtime_error("input stream not open");
+  if(typ_ != binary)
+    throw std::runtime_error("reading binary from text file");
+  if(dirn_ == out)
+    throw std::runtime_error("reading output file");
+  Block blk;
+  if(pIStream)
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728">{
+    for(size_t i=0; i&lt;size; ++i)
+    <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829">{
+      Byte b;
+      pIStream-&gt;get(b);
+      if(pIStream-&gt;good())
+        blk.push_back(b);
+      else
+        break;
+    }</div>
+  }</div>
+  return blk;
+}</div>
+//----&lt; writes a block of bytes to binary file &gt;---------------------------
+
+void File::putBlock(const Block&amp; blk)
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930">{
+  if(pOStream == nullptr || !pOStream-&gt;good())
+    throw std::runtime_error("output stream not open");
+  if(typ_ != binary)
+    throw std::runtime_error("writing binary to text file");
+  if(dirn_ == in)
+    throw std::runtime_error("writing input file");
+  if(!pOStream-&gt;good())
+    return;
+  for(size_t i=0; i&lt;blk.size(); ++i)
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031">{
+    pOStream-&gt;put(blk[i]);
+  }</div>
+}</div>
+//----&lt; read buffer of bytes from binary file &gt;----------------------------
+
+size_t File::getBuffer(size_t bufLen, File::byte* buffer)
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132">{
+  if (pIStream == nullptr || !pIStream-&gt;good())
+    throw std::runtime_error("input stream not open");
+  if (typ_ != binary)
+    throw std::runtime_error("reading binary from text file");
+  if (dirn_ == out)
+    throw std::runtime_error("reading output file");
+  size_t count = 0;
+  while (pIStream-&gt;good())
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233">{
+    buffer[count++] = pIStream-&gt;get();
+      if (count == bufLen)
+        break;
+  }</div>
+  if (!pIStream-&gt;good())  // don't write EOF char
+    --count;
+  return count;
+}</div>
+//----&lt; write buffer of bytes to binary file &gt;-------------------------------
+
+void File::putBuffer(size_t bufLen, File::byte* buffer)
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334">{
+  if (pOStream == nullptr || !pOStream-&gt;good())
+    throw std::runtime_error("output stream not open");
+  if (typ_ != binary)
+    throw std::runtime_error("writing binary to text file");
+  if (dirn_ == in)
+    throw std::runtime_error("writing input file");
+  if (!pOStream-&gt;good())
+    return;
+  size_t count = 0;
+  while(pOStream-&gt;good())
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435">{
+    pOStream-&gt;put(buffer[count++]);
+    if (count == bufLen)
+      break;
+  }</div>
+}</div>
+//----&lt; tests for error free stream state &gt;--------------------------------
+
+bool File::isGood()
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536">{
+  if(!good_)
+    return false;
+  if(pIStream != nullptr)
+    return (good_ = pIStream-&gt;good());
+  if(pOStream != nullptr)
+    return (good_ = pOStream-&gt;good());
+  return (good_ = false);
+}</div>
+//----&lt; flushes output stream to its file &gt;--------------------------------
+
+void File::flush()
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637">{
+  if(pOStream != nullptr &amp;&amp; pOStream-&gt;good())
+    pOStream-&gt;flush();
+}</div>
+//----&lt; clears error state enabling operations again &gt;---------------------
+
+void File::clear()
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738">{
+  if(pIStream != nullptr)
+    pIStream-&gt;clear();
+  if(pOStream != nullptr)
+    pOStream-&gt;clear();
+}</div>
+//----&lt; close file handle &gt;------------------------------------------------
+
+void File::close()
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839">{
+  File::flush();
+  if (pIStream != nullptr)
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940">{
+    pIStream-&gt;close();
+    pIStream = nullptr;
+    good_ = false;
+  }</div>
+  if (pOStream)
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041">{
+    pOStream-&gt;close();
+    pOStream = nullptr;
+    good_ = false;
+  }</div>
+}</div>
+//----&lt; file exists &gt;--------------------------------------------------
+
+bool File::exists(const std::string&amp; file)
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142">{
+  return ::GetFileAttributesA(file.c_str()) != INVALID_FILE_ATTRIBUTES;
+}</div>
+//----&lt; copy file &gt;----------------------------------------------------
+
+bool File::copy(const std::string&amp; src, const std::string&amp; dst, bool failIfExists)
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243">{
+  return ::CopyFileA(src.c_str(), dst.c_str(), failIfExists) != 0;
+}</div>
+//----&lt; remove file &gt;--------------------------------------------------
+
+bool File::remove(const std::string&amp; file)
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344">{
+  return ::DeleteFileA(file.c_str()) != 0;
+}</div>
+//----&lt; constructor &gt;--------------------------------------------------
+
+FileInfo::FileInfo(const std::string&amp; fileSpec)
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445">{
+  HANDLE hFile = ::FindFirstFileA(fileSpec.c_str(), &amp;data);
+  if(hFile == INVALID_HANDLE_VALUE)
+    good_ = false;
+  else
+    good_ = true;
+}</div>
+//----&lt; is passed filespec valid? &gt;------------------------------------
+
+bool FileInfo::good()
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546">{
+  return good_;
+}</div>
+//----&lt; return file name &gt;---------------------------------------------
+
+std::string FileInfo::name() const
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647">{
+  return Path::getName(data.cFileName);
+}</div>
+//----&lt; conversion helper &gt;--------------------------------------------
+
+std::string FileInfo::intToString(long i)
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748">{
+  std::ostringstream out;
+  out.fill('0');
+  out &lt;&lt; std::setw(2) &lt;&lt; i;
+  return out.str();
+}</div>
+//----&lt; return file date &gt;---------------------------------------------
+
+std::string FileInfo::date(dateFormat df) const
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849">{
+  std::string dateStr, timeStr;
+  FILETIME ft;
+  SYSTEMTIME st;
+  ::FileTimeToLocalFileTime(&amp;data.ftLastWriteTime, &amp;ft);
+  ::FileTimeToSystemTime(&amp;ft, &amp;st);
+  dateStr = intToString(st.wMonth) + '/' + intToString(st.wDay) + '/' + intToString(st.wYear);
+  timeStr = intToString(st.wHour) + ':' + intToString(st.wMinute) + ':' + intToString(st.wSecond);
+  if(df == dateformat)
+    return dateStr;
+  if(df == timeformat)
+    return timeStr;
+  return dateStr + " " + timeStr;
+}</div>
+//----&lt; return file size &gt;---------------------------------------------
+
+size_t FileInfo::size() const
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950">{
+  return (size_t)(data.nFileSizeLow + (data.nFileSizeHigh &lt;&lt; 8));
+}</div>
+//----&lt; is type archive? &gt;---------------------------------------------
+
+bool FileInfo::isArchive() const
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051">{
+  return (data.dwFileAttributes &amp; FILE_ATTRIBUTE_ARCHIVE) != 0;
+}</div>
+//----&lt; is type compressed? &gt;------------------------------------------
+
+bool FileInfo::isCompressed() const
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152">{
+  return (data.dwFileAttributes &amp; FILE_ATTRIBUTE_COMPRESSED) != 0;
+}</div>
+//----&lt; is type directory? &gt;-------------------------------------------
+
+bool FileInfo::isDirectory() const
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253">{
+  return (data.dwFileAttributes &amp; FILE_ATTRIBUTE_DIRECTORY) != 0;
+}</div>
+//----&lt; is type encrypted? &gt;---------------------------------------------
+
+bool FileInfo::isEncrypted() const
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354">{
+  return (data.dwFileAttributes &amp; FILE_ATTRIBUTE_ENCRYPTED) != 0;
+}</div>
+//----&lt; is type hiddent? &gt;---------------------------------------------
+
+bool FileInfo::isHidden() const
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455">{
+  return (data.dwFileAttributes &amp; FILE_ATTRIBUTE_HIDDEN) != 0;
+}</div>
+//----&lt; is type normal? &gt;---------------------------------------------
+
+bool FileInfo::isNormal() const
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556">{
+  return (data.dwFileAttributes &amp; FILE_ATTRIBUTE_NORMAL) != 0;
+}</div>
+//----&lt; is type offline? &gt;---------------------------------------------
+
+bool FileInfo::isOffLine() const
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657">{
+  return (data.dwFileAttributes &amp; FILE_ATTRIBUTE_OFFLINE) != 0;
+}</div>
+//----&lt; is type readonly? &gt;--------------------------------------------
+
+bool FileInfo::isReadOnly() const
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758">{
+  return (data.dwFileAttributes &amp; FILE_ATTRIBUTE_READONLY) != 0;
+}</div>
+//----&lt; is type system? &gt;----------------------------------------------
+
+bool FileInfo::isSystem() const
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859">{
+  return (data.dwFileAttributes &amp; FILE_ATTRIBUTE_SYSTEM  ) != 0;
+}</div>
+//----&lt; is type temporary? &gt;-------------------------------------------
+
+bool FileInfo::isTemporary() const
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960">{
+  return (data.dwFileAttributes &amp; FILE_ATTRIBUTE_TEMPORARY) != 0;
+}</div>
+//----&lt; compare names alphabetically &gt;---------------------------------
+
+bool FileInfo::operator&lt;(const FileInfo&amp; fi) const
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061">{
+  return strcmp(data.cFileName, fi.data.cFileName) == -1;
+}</div>
+//----&lt; compare names alphabetically &gt;---------------------------------
+
+bool FileInfo::operator==(const FileInfo&amp; fi) const
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162">{
+  return strcmp(data.cFileName, fi.data.cFileName) == 0;
+}</div>
+//----&lt; compare names alphabetically &gt;---------------------------------
+
+bool FileInfo::operator&gt;(const FileInfo&amp; fi) const
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263">{
+  return strcmp(data.cFileName, fi.data.cFileName) == 1;
+}</div>
+//----&lt; compare file times &gt;-------------------------------------------
+
+bool FileInfo::earlier(const FileInfo&amp; fi) const
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364">{
+  FILETIME ft1 = data.ftLastWriteTime;
+  FILETIME ft2 = fi.data.ftLastWriteTime;
+  return ::CompareFileTime(&amp;ft1, &amp;ft2) == -1;
+}</div>
+//----&lt; compare file times &gt;-------------------------------------------
+
+bool FileInfo::later(const FileInfo&amp; fi) const
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465">{
+  FILETIME ft1 = data.ftLastWriteTime;
+  FILETIME ft2 = fi.data.ftLastWriteTime;
+  return ::CompareFileTime(&amp;ft1, &amp;ft2) == 1;
+}</div>
+//----&lt; smaller &gt;------------------------------------------------------
+
+bool FileInfo::smaller(const FileInfo &amp;fi) const
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566">{
+  return size() &lt; fi.size();
+}</div>
+//----&lt; larger &gt;-------------------------------------------------------
+
+bool FileInfo::larger(const FileInfo &amp;fi) const
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667">{
+  return size() &gt; fi.size();
+}</div>
+//----&lt; convert string to lower case chars &gt;---------------------------
+
+std::string Path::toLower(const std::string&amp; src)
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768">{
+  std::string temp;
+  for(size_t i=0; i&lt;src.length(); ++i)
+    temp += tolower(src[i]);
+  return temp;
+}</div>
+//----&lt; convert string to upper case chars &gt;---------------------------
+
+  
+std::string Path::toUpper(const std::string&amp; src)
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869">{
+  std::string temp;
+  for(size_t i=0; i&lt;src.length(); ++i)
+    temp += toupper(src[i]);
+  return temp;
+}</div>
+//----&lt; get path from fileSpec &gt;---------------------------------------
+
+std::string Path::getName(const std::string &amp;fileSpec, bool withExt)
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970">{
+  size_t pos = fileSpec.find_last_of("/");
+  if(pos &gt;= fileSpec.length())
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071">{
+    pos = fileSpec.find_last_of("\\");
+    if(pos &gt;= fileSpec.length())
+    <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172">{
+      // no path prepended
+      if(withExt)
+        return fileSpec;
+      else
+      <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273">{
+        // remove ext
+        size_t pos = fileSpec.find(".");
+        if(pos &gt; fileSpec.size())
+          return fileSpec;
+        return fileSpec.substr(0, pos-1);
+      }</div>
+    }</div>
+  }</div>
+  if(withExt)
+    return fileSpec.substr(pos+1,fileSpec.length()-pos);
+  else
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374">{
+    // remove ext
+    size_t pos2 = fileSpec.find(".", pos);
+    if(pos2 &gt; fileSpec.size())
+      // no ext
+      return fileSpec.substr(pos+1);
+    return fileSpec.substr(pos+1, pos2-pos-1);
+  }</div>
+}</div>
+//----&lt; get extension from fileSpec &gt;----------------------------------
+  
+std::string Path::getExt(const std::string&amp; fileSpec)
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475">{
+  size_t pos1 = fileSpec.find_last_of('/');
+  size_t pos2 = fileSpec.find_last_of('\\');
+  size_t pos = fileSpec.find_last_of('.');
+  // handle ../ or ..\\ with no extension
+  if(pos1 &lt; fileSpec.length() || pos2 &lt; fileSpec.length())
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576">{
+    if(pos &lt; min(pos1, pos2))
+      return std::string("");
+  }</div>
+  // only . is extension delimiter
+  if(0 &lt;= pos &amp;&amp; pos &lt; fileSpec.length())
+    return toLower(fileSpec.substr(pos+1,fileSpec.length()-pos));
+  return std::string("");
+}</div>
+//----&lt; get path from fileSpec &gt;---------------------------------------
+
+std::string Path::getPath(const std::string &amp;fileSpec)
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677">{
+  size_t pos = fileSpec.find_last_of("/");
+  if(pos &gt;= fileSpec.length())
+    pos = fileSpec.find_last_of("\\");
+  if(pos &gt;= fileSpec.length())
+    return ".";
+  if(fileSpec.find(".",pos+1))
+    return fileSpec.substr(0,pos+1);
+  return fileSpec;
+}</div>
+//----&lt; get absoluth path from fileSpec &gt;------------------------------
+
+std::string Path::getFullFileSpec(const std::string &amp;fileSpec)
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778">{
+  const size_t BufSize = 256;
+  char buffer[BufSize];
+  char filebuffer[BufSize];  // don't use but GetFullPathName will
+  char* name = filebuffer;
+  ::GetFullPathNameA(fileSpec.c_str(),BufSize, buffer, &amp;name);
+  return std::string(buffer);
+}</div>
+//----&lt; create file spec from path and name &gt;--------------------------
+
+std::string Path::fileSpec(const std::string &amp;path, const std::string &amp;name)
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879">{
+  std::string fs;
+  size_t len = path.size();
+  if(path[len-1] == '/' || path[len-1] == '\\')
+    fs = path + name;
+  else
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980">{
+    if(path.find("/") &lt; path.size())
+      fs = path + "/" + name;
+    else if(path.find("\\") &lt; path.size())
+      fs = path + "\\" + name;
+    else
+      fs = path + "/" + name;
+  }</div>
+  return fs;
+}</div>
+//----&lt; return name of the current directory &gt;-----------------------------
+
+std::string Directory::getCurrentDirectory()
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081">{
+  char buffer[MAX_PATH];
+  ::GetCurrentDirectoryA(MAX_PATH,buffer);
+  return std::string(buffer);
+}</div>
+//----&lt; change the current directory to path &gt;-----------------------------
+
+bool Directory::setCurrentDirectory(const std::string&amp; path)
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182">{
+  return ::SetCurrentDirectoryA(path.c_str()) != 0;
+}</div>
+//----&lt; get names of all the files matching pattern (path:name) &gt;----------
+
+std::vector&lt;std::string&gt; Directory::getFiles(const std::string&amp; path, const std::string&amp; pattern)
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283">{
+  std::vector&lt;std::string&gt; files;
+  FileSystemSearch fss;
+  std::string file = fss.firstFile(path, pattern);
+  if(file.size() == 0)
+    return files;
+  files.push_back(file);
+  while(true)
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384">{
+    file = fss.nextFile();
+    if(file.size() == 0)
+      return files;
+    files.push_back(file);
+  }</div>
+  return files;
+}</div>
+//----&lt; get names of all directories matching pattern (path:name) &gt;--------
+
+std::vector&lt;std::string&gt; Directory::getDirectories(const std::string&amp; path, const std::string&amp; pattern)
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485">{
+  std::vector&lt;std::string&gt; dirs;
+  FileSystemSearch fss;
+  std::string dir = fss.firstDirectory(path, pattern);
+  if(dir.size() == 0)
+    return dirs;
+  dirs.push_back(dir);
+  while(true)
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586">{
+    dir = fss.nextDirectory();
+    if(dir.size() == 0)
+      return dirs;
+    dirs.push_back(dir);
+  }</div>
+  return dirs;
+}</div>
+//----&lt; create directory &gt;-------------------------------------------------
+
+bool Directory::create(const std::string&amp; path)
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687">{
+  return ::CreateDirectoryA(path.c_str(), NULL) == 0;
+}</div>
+//----&lt; does directory exist? &gt;--------------------------------------------
+
+bool Directory::exists(const std::string&amp; path)
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788">{
+  DWORD dwAttrib = GetFileAttributesA(path.c_str());
+
+  return (dwAttrib != INVALID_FILE_ATTRIBUTES &amp;&amp; 
+         (dwAttrib &amp; FILE_ATTRIBUTE_DIRECTORY));
+}</div>
+//----&lt; remove directory &gt;-------------------------------------------------
+
+bool Directory::remove(const std::string&amp; path)
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889">{
+  return ::RemoveDirectoryA(path.c_str()) == 0;
+}</div>
+//----&lt; find first file &gt;--------------------------------------------------
+
+std::string FileSystemSearch::firstFile(const std::string&amp; path, const std::string&amp; pattern)
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990">{
+  hFindFile = ::FindFirstFileA(Path::fileSpec(path, pattern).c_str(), pFindFileData);
+  if(hFindFile != INVALID_HANDLE_VALUE)
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091">{
+    if(!(pFindFileData-&gt;dwFileAttributes &amp; FILE_ATTRIBUTE_DIRECTORY))
+      return pFindFileData-&gt;cFileName;
+    else
+      while(::FindNextFileA(hFindFile, pFindFileData))
+        if(!(pFindFileData-&gt;dwFileAttributes &amp; FILE_ATTRIBUTE_DIRECTORY))
+          return pFindFileData-&gt;cFileName;
+  }</div>
+  return "";
+}</div>
+//----&lt; find next file &gt;---------------------------------------------------
+
+std::string FileSystemSearch::nextFile()
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192">{
+  while(::FindNextFileA(hFindFile, pFindFileData))
+    if(!(pFindFileData-&gt;dwFileAttributes &amp; FILE_ATTRIBUTE_DIRECTORY))
+      return pFindFileData-&gt;cFileName;
+  return "";
+}</div>
+//----&lt; find first file &gt;--------------------------------------------------
+
+std::string FileSystemSearch::firstDirectory(const std::string&amp; path, const std::string&amp; pattern)
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293">{
+  hFindFile = ::FindFirstFileA(Path::fileSpec(path, pattern).c_str(), pFindFileData);
+  if(hFindFile != INVALID_HANDLE_VALUE)
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394">{
+    if(pFindFileData-&gt;dwFileAttributes &amp; FILE_ATTRIBUTE_DIRECTORY)
+      return pFindFileData-&gt;cFileName;
+    else
+      while(::FindNextFileA(hFindFile, pFindFileData))
+        if(pFindFileData-&gt;dwFileAttributes &amp; FILE_ATTRIBUTE_DIRECTORY)
+          return pFindFileData-&gt;cFileName;
+  }</div>
+  return "";
+}</div>
+//----&lt; find next file &gt;---------------------------------------------------
+
+std::string FileSystemSearch::nextDirectory()
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495">{
+  while(::FindNextFileA(hFindFile, pFindFileData))
+    if(pFindFileData-&gt;dwFileAttributes &amp; FILE_ATTRIBUTE_DIRECTORY)
+      return pFindFileData-&gt;cFileName;
+  return "";
+}</div>
+//----&lt; test stub &gt;--------------------------------------------------------
+
+/*
+#ifdef TEST_FILESYSTEM
+
+void title(const std::string&amp; title, char ch='=')
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596">{
+  std::cout &lt;&lt; "\n  " &lt;&lt; title;
+  std::cout &lt;&lt; "\n " &lt;&lt; std::string(title.size()+2, ch);
+}</div>
+
+int main(int argc, char* argv[])
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394959697" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394959697, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394959697">{
+  title("Demonstrate Path Class");
+
+  std::string fs = Path::fileSpec(".","temp.txt");
+  std::cout &lt;&lt; "\n  Path::fileSpec(\".\",\"temp.txt\") = " &lt;&lt; fs;
+
+  std::string path = Path::getPath(fs);
+  std::cout &lt;&lt; "\n  Path::getPath(\"" + fs + "\") = " &lt;&lt; path;
+  
+  std::string ffs = Path::getFullFileSpec(fs);
+  std::cout &lt;&lt; "\n  Path::getFullFileSpec(\"" + fs + "\") = " &lt;&lt; ffs;
+  
+  std::string name = Path::getName(fs);
+  std::cout &lt;&lt; "\n  Path::getName(\"" + fs + "\") = " &lt;&lt; name;
+
+  std::string ext = Path::getExt(fs);
+  std::cout &lt;&lt; "\n  Path::getExt(\"" + fs + "\") = " &lt;&lt; ext;
+
+  std::string upper = Path::toUpper("temp.txt");
+  std::cout &lt;&lt; "\n  Path::toUpper(\"temp.txt\") = " &lt;&lt; upper;
+
+  std::string lower = Path::toLower("Temp.Txt");
+  std::cout &lt;&lt; "\n  Path::toLower(\"Temp.Txt\") = " &lt;&lt; lower;
+  std::cout &lt;&lt; std::endl;
+  
+  //title("Demonstrate FileSystemSearch class");
+
+  //const size_t PathSetSize = 2;
+  //std::string home = ::getenv("HOMEDRIVE");
+  //std::string pathSet[] = <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495969798" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495969798, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495969798">{ home+"\\\\", "." }</div>;
+  //FileSystemSearch fss;
+  //for(size_t i = 0; i&lt;PathSetSize; ++i)
+  //<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899">{
+  //  std::cout &lt;&lt; "\n  searching for files on \"" &lt;&lt; pathSet[i] &lt;&lt; "\"";
+  //  std::cout &lt;&lt; "\n " &lt;&lt; std::string(27 + pathSet[i].size(), '-');
+  //  std::string searchPath = pathSet[i];
+  //  std::string fileName = fss.firstFile(searchPath);
+  //  if(fileName.size() &gt; 0)
+  //    std::cout &lt;&lt; "\n  " &lt;&lt; fileName;
+  //  else
+  //    std::cout &lt;&lt; "\n  no files match search";
+  //  while(true) <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100">{
+  //    fileName = fss.nextFile();
+  //    if(fileName.size() &gt; 0)
+  //      std::cout &lt;&lt; "\n  " &lt;&lt; fileName;
+  //    else
+  //      break;
+  //  }</div>
+  //  std::cout &lt;&lt; std::endl;
+
+  //  std::cout &lt;&lt; "\n  searching for directories on \"" &lt;&lt; pathSet[i] &lt;&lt; "\"";
+  //  std::cout &lt;&lt; "\n " &lt;&lt; std::string(33 + pathSet[i].size(), '-');
+  //  std::string dirName = fss.firstDirectory(searchPath);
+  //  if(dirName.size() &gt; 0)
+  //    std::cout &lt;&lt; "\n  " &lt;&lt; dirName;
+  //  else
+  //    std::cout &lt;&lt; "\n  no directories match search";
+  //  while(true)
+  //  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101">{
+  //    dirName = fss.nextDirectory();
+  //    if(dirName.size() &gt; 0)
+  //      std::cout &lt;&lt; "\n  " &lt;&lt; dirName;
+  //    else
+  //      break;
+  //  }</div>
+  //  std::cout &lt;&lt; std::endl;
+  //}</div>
+  
+  title("Demonstrate Directory class");
+
+  // Display contents of current directory
+
+  std::cout &lt;&lt; "\n  current directory is:\n    " &lt;&lt; Directory::getCurrentDirectory();
+  std::cout &lt;&lt; "\n  It contains files:";
+  std::vector&lt;std::string&gt; currfiles = Directory::getFiles();
+  ///////////////////////////////////////////////////////
+  // This works too
+  // std::vector&lt;std::string&gt; currfiles = d.getFiles();  
+  for(size_t i=0; i&lt;currfiles.size(); ++i)
+    std::cout &lt;&lt; "\n    " &lt;&lt; currfiles[i].c_str();
+  std::cout &lt;&lt; "\n  and contains directories:";
+  std::vector&lt;std::string&gt; currdirs = Directory::getDirectories();
+  for(size_t i=0; i&lt;currdirs.size(); ++i)
+    std::cout &lt;&lt; "\n    " &lt;&lt; currdirs[i].c_str();
+  std::cout &lt;&lt; "\n";
+
+  // Display contents of non-current directory
+
+  std::cout &lt;&lt; "\n  .txt files residing in C:/temp are:";
+  currfiles = Directory::getFiles("c:/temp/", "*.txt");
+
+  // if we want fully qualified file names, we have to
+  // set the current directory to the path on which the files
+  // reside, if it isn't already so set
+
+  std::string currDir = Directory::getCurrentDirectory();
+  Directory::setCurrentDirectory("c:/temp/");
+  for(size_t i=0; i&lt;currfiles.size(); ++i)
+    std::cout &lt;&lt; "\n    " &lt;&lt; Path::getFullFileSpec(currfiles[i]).c_str();
+  Directory::setCurrentDirectory(currDir);
+
+  // we have to restore the current directory so the
+  // remaining tests work
+
+  // it's probably easier just to use Path::fileSpec(path, filename)
+  // like this:
+
+  for (size_t i = 0; i&lt;currfiles.size(); ++i)
+    std::cout &lt;&lt; "\n    " &lt;&lt; Path::fileSpec("c:\\temp\\", currfiles[i]).c_str();
+
+  std::cout &lt;&lt; "\n";
+  std::cout &lt;&lt; "\n  directories residing in C:/temp are:";
+  currdirs = Directory::getDirectories("c:/temp/");
+  for(size_t i=0; i&lt;currdirs.size(); ++i)
+    std::cout &lt;&lt; "\n    " &lt;&lt; currdirs[i].c_str();
+  std::cout &lt;&lt; "\n";
+
+  // Create directory
+
+  title("Demonstrate FileInfo Class Operations", '=');
+  std::cout &lt;&lt; "\n";
+
+  Directory::setCurrentDirectory(".");
+  std::cout &lt;&lt; "\n  current path is \"" &lt;&lt; Directory::getCurrentDirectory();
+  
+  std::string fn1;
+  if(argc &gt; 1)
+    fn1 = argv[1];
+  else
+    fn1 = "c:\\temp\\test.txt";
+  FileInfo fi(fn1);
+
+  if(fi.good())
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102">{
+    std::cout &lt;&lt; "\n  name: " &lt;&lt; "\t" &lt;&lt; fi.name();
+    std::cout &lt;&lt; "\n  date: " &lt;&lt; "\t" &lt;&lt; fi.date();
+    std::cout &lt;&lt; "\n  date: " &lt;&lt; "\t" &lt;&lt; fi.date(FileInfo::dateformat);
+    std::cout &lt;&lt; "\n  date: " &lt;&lt; "\t" &lt;&lt; fi.date(FileInfo::timeformat);
+    std::cout &lt;&lt; "\n  size: " &lt;&lt; "\t" &lt;&lt; fi.size() &lt;&lt; " bytes";
+    if(fi.isArchive())
+      std::cout &lt;&lt; "\n  is archive";
+    else
+      std::cout &lt;&lt; "\n  is not archive";
+    if(fi.isCompressed())
+      std::cout &lt;&lt; "\n  is compressed";
+    else
+      std::cout &lt;&lt; "\n  is not compressed";
+    if(fi.isDirectory())
+      std::cout &lt;&lt; "\n  is directory";
+    else
+      std::cout &lt;&lt; "\n  is not directory";
+    if(fi.isEncrypted())
+      std::cout &lt;&lt; "\n  is encrypted";
+    else
+      std::cout &lt;&lt; "\n  is not encrypted";
+    if(fi.isHidden())
+      std::cout &lt;&lt; "\n  is hidden";
+    else
+      std::cout &lt;&lt; "\n  is not hidden";
+    if(fi.isNormal())
+      std::cout &lt;&lt; "\n  is normal";
+    else
+      std::cout &lt;&lt; "\n  is not normal";
+    if(fi.isOffLine())
+      std::cout &lt;&lt; "\n  is offline";
+    else
+      std::cout &lt;&lt; "\n  is not offline";
+    if(fi.isReadOnly())
+      std::cout &lt;&lt; "\n  is readonly";
+    else
+      std::cout &lt;&lt; "\n  is not readonly";
+    if(fi.isSystem())
+      std::cout &lt;&lt; "\n  is system";
+    else
+      std::cout &lt;&lt; "\n  is not system";
+    if(fi.isTemporary())
+      std::cout &lt;&lt; "\n  is temporary";
+    else
+      std::cout &lt;&lt; "\n  is not temporary";
+  }</div>
+  else
+    std::cout &lt;&lt; "\n  filename " &lt;&lt; fn1 &lt;&lt; " is not valid in this context\n";
+
+  std::string fn2;
+  if(argc &gt; 2)
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103">{
+    fn1 = argv[1];
+    fn2 = argv[2];
+  }</div>
+  else
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104">{
+    fn1 = "FileSystem.h";
+    fn2 = "FileSystem.cpp";
+  }</div>
+  FileInfo fi1(fn1);
+  FileInfo fi2(fn2);
+  if(fi1.good() &amp;&amp; fi2.good())
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105">{
+    if(fi1 == fi1)
+      std::cout &lt;&lt; "\n  " &lt;&lt; fi1.name() &lt;&lt; " == " &lt;&lt; fi1.name();
+    else
+      std::cout &lt;&lt; "\n  " &lt;&lt; fi1.name() &lt;&lt; " != " &lt;&lt; fi1.name();
+    if(fi1 &lt; fi1)
+      std::cout &lt;&lt; "\n  " &lt;&lt; fi1.name() &lt;&lt; " &lt; " &lt;&lt; fi1.name();
+    else
+      std::cout &lt;&lt; "\n  " &lt;&lt; fi1.name() &lt;&lt; " &gt;= " &lt;&lt; fi1.name();
+    if(fi1 == fi2)
+      std::cout &lt;&lt; "\n  " &lt;&lt; fi1.name() &lt;&lt; " == " &lt;&lt; fi2.name();
+    else
+      std::cout &lt;&lt; "\n  " &lt;&lt; fi1.name() &lt;&lt; " != " &lt;&lt; fi2.name();
+    if(fi1 &lt; fi2)
+      std::cout &lt;&lt; "\n  " &lt;&lt; fi1.name() &lt;&lt; " &lt; " &lt;&lt; fi2.name();
+    else
+      std::cout &lt;&lt; "\n  " &lt;&lt; fi1.name() &lt;&lt; " &gt;= " &lt;&lt; fi2.name();
+    if(fi1.smaller(fi2))
+      std::cout &lt;&lt; "\n  " &lt;&lt; fi1.name() &lt;&lt; " is smaller than " &lt;&lt; fi2.name();
+    else
+      std::cout &lt;&lt; "\n  " &lt;&lt; fi1.name() &lt;&lt; " is not smaller than " &lt;&lt; fi2.name();
+    if(fi1.earlier(fi2))
+      std::cout &lt;&lt; "\n  " &lt;&lt; fi1.name() &lt;&lt; " is earlier than " &lt;&lt; fi2.name();
+    else
+      std::cout &lt;&lt; "\n  " &lt;&lt; fi1.name() &lt;&lt; " is not earlier than " &lt;&lt; fi2.name();
+    std::cout &lt;&lt; std::endl;
+  }</div>
+  else
+    std::cout &lt;&lt; "\n  files " &lt;&lt; fn1 &lt;&lt; " and " &lt;&lt; fn2 &lt;&lt; " are not valid in this context\n";
+
+  title("Demonstrate File class operations", '=');
+  std::cout &lt;&lt; "\n";
+
+  // copy binary file from one directory to another
+
+  File me("../debug/filesystemdemo.exe");
+  me.open(File::in, File::binary);
+  std::cout &lt;&lt; "\n  copying " &lt;&lt; me.name().c_str() &lt;&lt; " to c:/temp";
+  if(!me.isGood())
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106">{
+    std::cout &lt;&lt; "\n  can't open executable\n";
+    std::cout &lt;&lt; "\n  looking for:\n  ";
+    std::cout &lt;&lt; Path::getFullFileSpec(me.name()) &lt;&lt; "\n";
+  }</div>
+  else
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107">{
+    File you("c:/temp/fileSystemdemo.exe");
+    you.open(File::out, File::binary);
+    if(you.isGood())
+    <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108">{
+      while(me.isGood())
+      <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109">{
+        static size_t count = 0;
+        Block b = me.getBlock(1024);
+        you.putBlock(b);
+        if (++count &lt; 10)
+        <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110">{
+          std::cout &lt;&lt; "\n    reading block of " &lt;&lt; b.size() &lt;&lt; " bytes";
+          std::cout &lt;&lt; "\n    writing block of " &lt;&lt; b.size() &lt;&lt; " bytes";
+        }</div>
+        if (b.size() &lt; 1024)
+        <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111">{
+          std::cout &lt;&lt; "\n\n    omitted " &lt;&lt; count-10 &lt;&lt; " blocks from display\n\n";
+          std::cout &lt;&lt; "\n    reading block of " &lt;&lt; b.size() &lt;&lt; " bytes";
+          std::cout &lt;&lt; "\n    writing block of " &lt;&lt; b.size() &lt;&lt; " bytes";
+        }</div>
+      }</div>
+      std::cout &lt;&lt; "\n";
+    }</div>
+  }</div>
+
+  // save some filespecs of text files in a vector for File demonstrations
+
+  std::vector&lt;std::string&gt; files;
+  if(argc == 1)
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112">{
+    std::cout &lt;&lt; "\n\n  Enter, on the command line, an additional filename to process.\n";
+  }</div>
+
+  for(int i=1; i&lt;argc; ++i)
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113">{
+    files.push_back(argv[i]);
+  }</div>
+  files.push_back("FileSystem.cpp");                     // file not on current path
+  files.push_back("../FileSystemDemo/FileSystem.cpp");   // file from project directory
+  files.push_back("../FileSystemTest.txt");              // file in solution directory
+  files.push_back("foobar");                             // doesn't exist
+
+  // open each file and display a few lines of text
+
+  for(size_t i=0; i&lt;files.size(); ++i)
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114">{
+    File file(files[i]);
+    file.open(File::in);
+    if(!file.isGood())
+    <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115">{
+      std::cout &lt;&lt; "\n  Can't open file " &lt;&lt; file.name();
+      std::cout &lt;&lt; "\n  Here's what the program can't find:\n  " &lt;&lt; Path::getFullFileSpec(file.name()); 
+      continue;
+    }</div>
+    std::string temp = std::string("Processing file ") + files[i];
+    title(temp, '-');
+    for(int j=0; j&lt;10; ++j)
+    <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116">{
+      if(!file.isGood())
+        break;
+      std::cout &lt;&lt; "\n  -- " &lt;&lt; file.getLine().c_str();
+    }</div>
+    std::cout &lt;&lt; "\n";
+  }</div>
+  std::cout &lt;&lt; "\n";
+
+  // read all lines of text file into string
+
+  title("testing File::readAll()", '-');
+  std::cout &lt;&lt; "\n";
+  File testAll("../FileSystemTest.txt");
+  testAll.open(File::in);
+  if (testAll.isGood())
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117">{
+    std::string all = testAll.readAll();
+    std::cout &lt;&lt; all &lt;&lt; "\n";
+  }</div>
+  testAll.close();
+
+  title("testing File::readAll(true)", '-');
+  std::cout &lt;&lt; "\n";
+  File testAllTrue("../FileSystemTest.txt");
+  testAllTrue.open(File::in);
+  if (testAllTrue.isGood())
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118">{
+    std::string all = testAllTrue.readAll(true);
+    std::cout &lt;&lt; all &lt;&lt; "\n";
+  }</div>
+  testAllTrue.close();
+
+  // test reading non-text files
+
+  title("test reading non-text files", '-');
+  std::cout &lt;&lt; "\n";
+  std::string testPath = "./debug";  // run from project directory (what Visual Studio does)
+  if (!Directory::exists(testPath))
+    testPath = ".";                  // run from solution debug directory
+  std::vector&lt;std::string&gt; testFiles = Directory::getFiles(testPath);
+  for (auto file : testFiles)
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119">{
+    try
+    <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120">{
+      std::string ext = Path::getExt(file);
+      if (ext == "exe" || ext == "dll" || file == "run.dat")
+      <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121">{
+        //reading binary file works, but generates a lot of garbage
+        //I use run.dat to capture this output so including will make output confusing
+
+        std::cout &lt;&lt; "  skipping binary file " &lt;&lt; file &lt;&lt; "\n";
+        continue;
+      }</div>
+      File test(file);
+      test.open(File::in);  // open as text file
+      std::cout &lt;&lt; "\n  processing \"" &lt;&lt; file &lt;&lt; "\"\n";
+      if (test.isGood())
+      <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122">{
+        std::string text = test.readAll(true);
+        std::cout &lt;&lt; text &lt;&lt; "\n";
+      }</div>
+      else
+      <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123">{
+        std::cout &lt;&lt; "\n  open failed\n";
+      }</div>
+    }</div>
+    catch (std::exception&amp; ex)
+    <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124">{
+      std::cout &lt;&lt; "\n  Exception: " &lt;&lt; ex.what() &lt;&lt; "\n";
+    }</div>
+  }</div>
+
+  // read text file and write to another text file
+
+  title("writing to c:/temp/test.txt", '-');
+  File in("../FileSystemDemo/FileSystem.h");
+  in.open(File::in, File::text);
+  File out("c:/temp/test.txt");
+  out.open(File::out, File::text);
+  while(in.isGood())
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125">{
+    std::string temp = in.getLine();
+    //std::cout &lt;&lt; "\n  " &lt;&lt; temp.c_str();
+    out.putLine(temp);
+    out.putLine("\n");
+  }</div>
+  std::cout &lt;&lt; "\n  check c:/temp/test.txt to validate";
+  std::cout &lt;&lt; "\n\n";
+
+  // read and write buffers
+
+  title("reading and writing buffers");
+  std::cout &lt;&lt; "\n  " &lt;&lt; FileSystem::Directory::getCurrentDirectory();
+  std::string fileIn = "TestFileSystem/UnitTest.h";
+  std::string fileOut = "TestFileSystem/CopyOfUnitTest.h";
+  File bufferIn(fileIn);
+  bufferIn.open(File::in, File::binary);
+  if (!bufferIn.isGood())
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126">{
+    std::cout &lt;&lt; "\n  could not open \"" &lt;&lt; fileIn &lt;&lt; "\" for reading";
+      return 1;
+  }</div>
+  else
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127">{
+    std::cout &lt;&lt; "\n  opening: \"" &lt;&lt; fileIn &lt;&lt; "\" for reading";
+  }</div>
+  File bufferOut(fileOut);
+  bufferOut.open(File::out, File::binary);
+  if (!bufferOut.isGood())
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128">{
+    std::cout &lt;&lt; "\n  could not open \"" &lt;&lt; fileOut &lt;&lt; "\" for writing\n\n";
+      return 1;
+  }</div>
+  else
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129">{
+    std::cout &lt;&lt; "\n  opening: \"" &lt;&lt; fileOut &lt;&lt; "\" for writing";
+  }</div>
+  std::cout &lt;&lt; "\n";
+  const size_t bufLen = 124;
+  File::byte buffer[bufLen];
+  while (true)
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130">{
+    size_t resultSize = bufferIn.getBuffer(bufLen, buffer);
+    //std::cout &lt;&lt; "\n  reading buffer of size " &lt;&lt; resultSize &lt;&lt; " bytes";
+    std::string temp1(buffer, resultSize);
+    std::cout &lt;&lt; temp1;
+    //std::cout &lt;&lt; "\n  writing buffer of size " &lt;&lt; resultSize &lt;&lt; "bytes";
+    bufferOut.putBuffer(resultSize, buffer);
+    if (resultSize &lt; bufLen || !bufferIn.isGood() || !bufferOut.isGood())
+    <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131">{
+      bufferIn.close();
+      bufferOut.close();
+      break;
+    }</div>
+  }</div>
+  std::cout &lt;&lt; "\n\n";
+}</div>
+#endif
+*/
+
+
+</pre>
+</body> 
+</html> 

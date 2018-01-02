@@ -1,0 +1,190 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<link href=1.StyleSheet.css rel="stylesheet" type="text/css"/> 
+<script  type="text/javascript" src=2.JavaScript.js></script></head> 
+<body> 
+<div id="titleHeader"> 
+<h1>Code Files with Dependencies</h1><div id="menuBar"> 
+<h3> Dependencies </h3><a href = "IFileMgr.h.html">IFileMgr.h</a><br/><a href = "FileSystem.h.html">FileSystem.h</a><br/></div> 
+<pre id="matter">
+#ifndef FILEMGR_H
+#define FILEMGR_H
+/////////////////////////////////////////////////////////////////////
+// FileMgr.h - find files matching specified patterns              //
+//             on a specified path                                 //
+// ver 2.2                                                         //
+// Jim Fawcett, CSE687 - Object Oriented Design, Spring 2016       //
+/////////////////////////////////////////////////////////////////////
+/*
+* Package Operations:
+* -------------------
+* This package provides a class, FileMgr, and object factory function,
+* Create().  It's mission is to search the directory tree, rooted at
+* a specified path, looking for files that match a set of specified
+* patterns.
+*
+* It provides virtual functions file(...), dir(...), and done(), which
+* an application can override to provide application specific processing
+* for the events: file found, directory found, and finished processing.
+*
+* The package also provides interface hooks that serve the same purpose
+* but allow multiple receivers for those events.
+*
+* Required Files:
+* ---------------
+*   FileMgr.h, FileMgr.cpp, IFileMgr.h, 
+*   FileSystem.h, FileSystem.cpp
+*
+* Build Process:
+* --------------
+*   devenv FileMgr.sln /rebuild debug
+*
+* Maintenance History:
+* --------------------
+* ver 2.2 : 28 Aug 2016
+* - added more prologue comments
+* ver 2.1 : 31 Jul 2016
+* - added virtual file, dir, and done functions
+* - this lets application override instead of registering for event
+* ver 2.0 : 12 Mar 2016
+* - fixes bug in directory recursion in find(path)
+* - reduces scope of for loop in find for efficiency
+* ver 1.0 : 11 Mar 2016
+* - first release
+*/
+
+#include "IFileMgr.h"
+#include "../FileSystem/FileSystem.h"
+
+namespace FileManager
+<button class="buttonClass" id="btn1" onclick="expandAndCollapse(1, id)">-</button><div class="buttonClass" id="1">{
+  class FileMgr : public IFileMgr
+  <button class="buttonClass" id="btn12" onclick="expandAndCollapse(12, id)">-</button><div class="buttonClass" id="12">{
+  public:
+    using patterns = std::vector&lt;std::string&gt;;
+    using File = std::string;
+    using Dir = std::string;
+    using fileSubscribers = std::vector&lt;IFileEventHandler*&gt;;
+    using dirSubscribers = std::vector&lt;IDirEventHandler*&gt;;
+    using doneSubscribers = std::vector&lt;IDoneEventHandler*&gt;;
+
+    virtual ~FileMgr() <button class="buttonClass" id="btn123" onclick="expandAndCollapse(123, id)">-</button><div class="buttonClass" id="123">{}</div>
+
+    //----&lt; set default file pattern &gt;-------------------------------
+
+    FileMgr(const std::string&amp; path) : path_(path)
+    <button class="buttonClass" id="btn1234" onclick="expandAndCollapse(1234, id)">-</button><div class="buttonClass" id="1234">{
+      patterns_.push_back("*.*");
+      pInstance_ = this;
+    }</div>
+    //----&lt; return instance of FileMgr &gt;-----------------------------
+
+    static IFileMgr* getInstance()
+    <button class="buttonClass" id="btn12345" onclick="expandAndCollapse(12345, id)">-</button><div class="buttonClass" id="12345">{
+      return pInstance_;
+    }</div>
+    //----&lt; add file pattern, removing default on first call &gt;-------
+
+    void addPattern(const std::string&amp; patt)
+    <button class="buttonClass" id="btn123456" onclick="expandAndCollapse(123456, id)">-</button><div class="buttonClass" id="123456">{
+      if (patterns_.size() == 1 &amp;&amp; patterns_[0] == "*.*")
+        patterns_.pop_back();
+      patterns_.push_back(patt);
+    }</div>
+    //----&lt; applications can overload this or reg for fileEvt &gt;------
+
+    virtual void file(const File&amp; f)
+    <button class="buttonClass" id="btn1234567" onclick="expandAndCollapse(1234567, id)">-</button><div class="buttonClass" id="1234567">{
+      ++numFilesProcessed;
+      for (auto pEvtHandler : fileSubscribers_)
+      <button class="buttonClass" id="btn12345678" onclick="expandAndCollapse(12345678, id)">-</button><div class="buttonClass" id="12345678">{
+        pEvtHandler-&gt;execute(f);
+      }</div>
+    }</div>
+    //----&lt; applications can overload this or reg for dirEvt &gt;-------
+
+    virtual void dir(const Dir&amp; fpath)
+    <button class="buttonClass" id="btn123456789" onclick="expandAndCollapse(123456789, id)">-</button><div class="buttonClass" id="123456789">{
+      for (auto pEvtHandler : dirSubscribers_)
+      <button class="buttonClass" id="btn12345678910" onclick="expandAndCollapse(12345678910, id)">-</button><div class="buttonClass" id="12345678910">{
+        pEvtHandler-&gt;execute(fpath);
+      }</div>
+    }</div>
+    //----&lt; applications can overload this or reg for doneEvt &gt;------
+
+    virtual void done()
+    <button class="buttonClass" id="btn1234567891011" onclick="expandAndCollapse(1234567891011, id)">-</button><div class="buttonClass" id="1234567891011">{
+      for (auto pEvtHandler : doneSubscribers_)
+      <button class="buttonClass" id="btn123456789101112" onclick="expandAndCollapse(123456789101112, id)">-</button><div class="buttonClass" id="123456789101112">{
+        pEvtHandler-&gt;execute(numFilesProcessed);
+      }</div>
+    }</div>
+    //----&lt; start search on previously specified path &gt;--------------
+
+    void search()
+    <button class="buttonClass" id="btn12345678910111213" onclick="expandAndCollapse(12345678910111213, id)">-</button><div class="buttonClass" id="12345678910111213">{
+      find(path_);
+      done();
+    }</div>
+    //----&lt; search current path including subdirectories &gt;-----------
+
+    void find(const std::string&amp; path)
+    <button class="buttonClass" id="btn1234567891011121314" onclick="expandAndCollapse(1234567891011121314, id)">-</button><div class="buttonClass" id="1234567891011121314">{
+      std::string fpath = FileSystem::Path::getFullFileSpec(path);
+      dir(fpath);
+      for (auto patt : patterns_)
+      <button class="buttonClass" id="btn123456789101112131415" onclick="expandAndCollapse(123456789101112131415, id)">-</button><div class="buttonClass" id="123456789101112131415">{
+        std::vector&lt;std::string&gt; files = FileSystem::Directory::getFiles(fpath, patt);
+        for (auto f : files)
+        <button class="buttonClass" id="btn12345678910111213141516" onclick="expandAndCollapse(12345678910111213141516, id)">-</button><div class="buttonClass" id="12345678910111213141516">{
+          file(f);
+        }</div>
+      }</div>
+      std::vector&lt;std::string&gt; dirs = FileSystem::Directory::getDirectories(fpath);
+      for (auto d : dirs)
+      <button class="buttonClass" id="btn1234567891011121314151617" onclick="expandAndCollapse(1234567891011121314151617, id)">-</button><div class="buttonClass" id="1234567891011121314151617">{
+        if (d == "." || d == "..")
+          continue;
+        std::string dpath = fpath + "\\" + d;
+        find(dpath);
+      }</div>
+    }</div>
+    //----&lt; applications use this to register for notification &gt;-----
+
+    void regForFiles(IFileEventHandler* pHandler)
+    <button class="buttonClass" id="btn123456789101112131415161718" onclick="expandAndCollapse(123456789101112131415161718, id)">-</button><div class="buttonClass" id="123456789101112131415161718">{
+      fileSubscribers_.push_back(pHandler);
+    }</div>
+    //----&lt; applications use this to register for notification &gt;-----
+
+    void regForDirs(IDirEventHandler* pHandler)
+    <button class="buttonClass" id="btn12345678910111213141516171819" onclick="expandAndCollapse(12345678910111213141516171819, id)">-</button><div class="buttonClass" id="12345678910111213141516171819">{
+      dirSubscribers_.push_back(pHandler);
+    }</div>
+    //----&lt; applications use this to register for notification &gt;-----
+
+    void regForDone(IDoneEventHandler* pHandler)
+    <button class="buttonClass" id="btn1234567891011121314151617181920" onclick="expandAndCollapse(1234567891011121314151617181920, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920">{
+      doneSubscribers_.push_back(pHandler);
+    }</div>
+  private:
+    std::string path_;
+    patterns patterns_;
+    size_t numFilesProcessed = 0;
+    fileSubscribers fileSubscribers_;
+    dirSubscribers dirSubscribers_;
+    doneSubscribers doneSubscribers_;
+    static IFileMgr* pInstance_;
+  }</div>;
+
+  inline IFileMgr* FileMgrFactory::create(const std::string&amp; path)
+  <button class="buttonClass" id="btn123456789101112131415161718192021" onclick="expandAndCollapse(123456789101112131415161718192021, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021">{
+    return new FileMgr(path);
+  }</div>
+}</div>
+#endif
+
+</pre>
+</body> 
+</html> 

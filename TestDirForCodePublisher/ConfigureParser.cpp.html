@@ -1,0 +1,257 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<link href=1.StyleSheet.css rel="stylesheet" type="text/css"/> 
+<script  type="text/javascript" src=2.JavaScript.js></script></head> 
+<body> 
+<div id="titleHeader"> 
+<h1>Code Files with Dependencies</h1><div id="menuBar"> 
+<h3> Dependencies </h3><a href = "Parser.h.html">Parser.h</a><br/><a href = "SemiExp.h.html">SemiExp.h</a><br/><a href = "Tokenizer.h.html">Tokenizer.h</a><br/><a href = "ActionsAndRules.h.html">ActionsAndRules.h</a><br/><a href = "ConfigureParser.h.html">ConfigureParser.h</a><br/></div> 
+<pre id="matter">
+/////////////////////////////////////////////////////////////////////
+//  ConfigureParser.cpp - builds and configures parsers            //
+//  ver 3.2                                                        //
+//                                                                 //
+//  Lanaguage:     Visual C++ 2005                                 //
+//  Platform:      Dell Dimension 9150, Windows XP SP2             //
+//  Application:   Prototype for CSE687 Pr1, Sp06                  //
+//  Author:        Jim Fawcett, CST 2-187, Syracuse University     //
+//                 (315) 443-3948, jfawcett@twcny.rr.com           //
+/////////////////////////////////////////////////////////////////////
+
+#include &lt;fstream&gt;
+#include "Parser.h"
+#include "../SemiExp/SemiExp.h"
+#include "../Tokenizer/Tokenizer.h"
+#include "ActionsAndRules.h"
+#include "ConfigureParser.h"
+
+using namespace CodeAnalysis;
+using namespace Scanner;
+
+//----&lt; destructor releases all parts &gt;------------------------------
+
+ConfigParseForCodeAnal::~ConfigParseForCodeAnal()
+<button class="buttonClass" id="btn1" onclick="expandAndCollapse(1, id)">-</button><div class="buttonClass" id="1">{
+  // when Builder goes out of scope, everything must be deallocated
+
+  delete pHandleBeginScope;
+  delete pBeginScope;
+  delete pHandleEndScope;
+  delete pEndScope;
+  delete pHandlePreprocStatement;
+  delete pPreprocStatement;
+  delete pHandleClassDefinition;
+  delete pClassDefinition;
+  delete pHandleStructDefinition;
+  delete pStructDefinition;
+  //delete pPrintFunction;
+  delete pHandleCppFunctionDefinition;
+  delete pCppFunctionDefinition;
+  delete pHandleCSharpFunctionDefinition;
+  delete pCSharpFunctionDefinition;
+  delete pCppDeclaration;
+  delete pHandleCppDeclaration;
+  delete pCSharpDeclaration;
+  delete pHandleCSharpDeclaration;
+  delete pCppExecutable;
+  delete pHandleCppExecutable;
+  delete pCSharpExecutable;
+  delete pHandleCSharpExecutable;
+  delete pDefault;
+  delete pHandleDefault;
+  delete pRepo;
+  delete pParser;
+  delete pSemi;
+  delete pToker;
+  if(pIn != nullptr)
+    pIn-&gt;close();
+  delete pIn;
+}</div>
+//----&lt; attach toker to a file stream or stringstream &gt;------------
+
+bool ConfigParseForCodeAnal::Attach(const std::string&amp; name, bool isFile)
+<button class="buttonClass" id="btn12" onclick="expandAndCollapse(12, id)">-</button><div class="buttonClass" id="12">{
+  if(pToker == 0)
+    return false;
+  pIn = new std::ifstream(name);
+  if (!pIn-&gt;good())
+    return false;
+  
+  // check for Byte Order Mark (BOM)
+  char a, b, c;
+  a = pIn-&gt;get();
+  b = pIn-&gt;get();
+  c = pIn-&gt;get();
+  if (a != (char)0xEF || b != (char)0xBB || c != (char)0xBF)
+    pIn-&gt;seekg(0);
+
+  if (!pIn-&gt;good())
+  <button class="buttonClass" id="btn123" onclick="expandAndCollapse(123, id)">-</button><div class="buttonClass" id="123">{
+    // empty file, but openable, so return true, avoids error message
+    return true;
+  }</div>
+  return pToker-&gt;attach(pIn);
+}</div>
+//----&lt; Here's where all the parts get assembled &gt;-----------------
+
+Parser* ConfigParseForCodeAnal::Build()
+<button class="buttonClass" id="btn1234" onclick="expandAndCollapse(1234, id)">-</button><div class="buttonClass" id="1234">{
+  try
+  <button class="buttonClass" id="btn12345" onclick="expandAndCollapse(12345, id)">-</button><div class="buttonClass" id="12345">{
+    // add Parser's main parts
+
+    pToker = new Toker;
+    pToker-&gt;returnComments(false);
+    pSemi = new SemiExp(pToker);
+    pParser = new Parser(pSemi);
+    pRepo = new Repository(pToker);
+
+    // configure to manage scope
+    // these must come first - they return true on match
+    // so rule checking continues
+
+    pBeginScope = new BeginScope();
+    pHandleBeginScope = new HandleBeginScope(pRepo);
+    pBeginScope-&gt;addAction(pHandleBeginScope);
+    pParser-&gt;addRule(pBeginScope);
+
+    pEndScope = new EndScope();
+    pHandleEndScope = new HandleEndScope(pRepo);
+    pEndScope-&gt;addAction(pHandleEndScope);
+    pParser-&gt;addRule(pEndScope);
+
+    // configure to detect and act on function definitions
+    // these will stop further rule checking by returning false
+
+    pPreprocStatement = new PreprocStatement;
+    pHandlePreprocStatement = new HandlePreprocStatement(pRepo);
+    pPreprocStatement-&gt;addAction(pHandlePreprocStatement);
+    pParser-&gt;addRule(pPreprocStatement);
+
+    pNamespaceDefinition = new NamespaceDefinition;
+    pHandleNamespaceDefinition = new HandleNamespaceDefinition(pRepo);
+    pNamespaceDefinition-&gt;addAction(pHandleNamespaceDefinition);
+    pParser-&gt;addRule(pNamespaceDefinition);
+
+    pClassDefinition = new ClassDefinition;
+    pHandleClassDefinition = new HandleClassDefinition(pRepo);
+    pClassDefinition-&gt;addAction(pHandleClassDefinition);
+    pParser-&gt;addRule(pClassDefinition);
+
+    pStructDefinition = new StructDefinition;
+    pHandleStructDefinition = new HandleStructDefinition(pRepo);
+    pStructDefinition-&gt;addAction(pHandleStructDefinition);
+    pParser-&gt;addRule(pStructDefinition);
+
+    pCppFunctionDefinition = new CppFunctionDefinition;
+    pHandleCppFunctionDefinition = new HandleCppFunctionDefinition(pRepo);  // no action
+    pCppFunctionDefinition-&gt;addAction(pHandleCppFunctionDefinition);
+    pParser-&gt;addRule(pCppFunctionDefinition);
+
+    pCSharpFunctionDefinition = new CSharpFunctionDefinition;
+    pHandleCSharpFunctionDefinition = new HandleCSharpFunctionDefinition(pRepo);  // no action
+    pCSharpFunctionDefinition-&gt;addAction(pHandleCSharpFunctionDefinition);
+    pParser-&gt;addRule(pCSharpFunctionDefinition);
+
+    // configure to detect and act on declarations and Executables
+
+    pControlDefinition = new ControlDefinition;
+    pHandleControlDefinition = new HandleControlDefinition(pRepo);
+    pControlDefinition-&gt;addAction(pHandleControlDefinition);
+    pParser-&gt;addRule(pControlDefinition);
+
+    pCppDeclaration = new CppDeclaration;
+    pHandleCppDeclaration = new HandleCppDeclaration(pRepo);
+    pCppDeclaration-&gt;addAction(pHandleCppDeclaration);
+    pParser-&gt;addRule(pCppDeclaration);
+
+    pCSharpDeclaration = new CSharpDeclaration;
+    pHandleCSharpDeclaration = new HandleCSharpDeclaration(pRepo);
+    pCSharpDeclaration-&gt;addAction(pHandleCSharpDeclaration);
+    pParser-&gt;addRule(pCSharpDeclaration);
+
+    pCppExecutable = new CppExecutable;
+    pHandleCppExecutable = new HandleCppExecutable(pRepo);
+    pCppExecutable-&gt;addAction(pHandleCppExecutable);
+    pParser-&gt;addRule(pCppExecutable);
+
+    pCSharpExecutable = new CSharpExecutable;
+    pHandleCSharpExecutable = new HandleCSharpExecutable(pRepo);
+    pCSharpExecutable-&gt;addAction(pHandleCSharpExecutable);
+    pParser-&gt;addRule(pCSharpExecutable);
+
+    pDefault = new Default;
+    pHandleDefault = new HandleDefault(pRepo);
+    pDefault-&gt;addAction(pHandleDefault);
+    pParser-&gt;addRule(pDefault);
+
+    return pParser;
+  }</div>
+  catch(std::exception&amp; ex)
+  <button class="buttonClass" id="btn123456" onclick="expandAndCollapse(123456, id)">-</button><div class="buttonClass" id="123456">{
+    std::cout &lt;&lt; "\n\n  " &lt;&lt; ex.what() &lt;&lt; "\n\n";
+    return 0;
+  }</div>
+}</div>
+
+#ifdef TEST_CONFIGUREPARSER
+
+#include &lt;queue&gt;
+#include &lt;string&gt;
+
+int main(int argc, char* argv[])
+<button class="buttonClass" id="btn1234567" onclick="expandAndCollapse(1234567, id)">-</button><div class="buttonClass" id="1234567">{
+  std::cout &lt;&lt; "\n  Testing ConfigureParser module\n "
+            &lt;&lt; std::string(32,'=') &lt;&lt; std::endl;
+
+  // collecting tokens from files, named on the command line
+
+  if(argc &lt; 2)
+  <button class="buttonClass" id="btn12345678" onclick="expandAndCollapse(12345678, id)">-</button><div class="buttonClass" id="12345678">{
+    std::cout 
+      &lt;&lt; "\n  please enter name of file to process on command line\n\n";
+    return 1;
+  }</div>
+
+  for(int i=1; i&lt;argc; ++i)
+  <button class="buttonClass" id="btn123456789" onclick="expandAndCollapse(123456789, id)">-</button><div class="buttonClass" id="123456789">{
+    std::cout &lt;&lt; "\n  Processing file " &lt;&lt; argv[i];
+    std::cout &lt;&lt; "\n  " &lt;&lt; std::string(16 + strlen(argv[i]),'-');
+
+    ConfigParseForCodeAnal configure;
+    Parser* pParser = configure.Build();
+    try
+    <button class="buttonClass" id="btn12345678910" onclick="expandAndCollapse(12345678910, id)">-</button><div class="buttonClass" id="12345678910">{
+      if(pParser)
+      <button class="buttonClass" id="btn1234567891011" onclick="expandAndCollapse(1234567891011, id)">-</button><div class="buttonClass" id="1234567891011">{
+        if(!configure.Attach(argv[i]))
+        <button class="buttonClass" id="btn123456789101112" onclick="expandAndCollapse(123456789101112, id)">-</button><div class="buttonClass" id="123456789101112">{
+          std::cout &lt;&lt; "\n  could not open file " &lt;&lt; argv[i] &lt;&lt; std::endl;
+          continue;
+        }</div>
+      }</div>
+      else
+      <button class="buttonClass" id="btn12345678910111213" onclick="expandAndCollapse(12345678910111213, id)">-</button><div class="buttonClass" id="12345678910111213">{
+        std::cout &lt;&lt; "\n\n  Parser not built\n\n";
+        return 1;
+      }</div>
+      // now that parser is built, use it
+
+      while(pParser-&gt;next())
+        pParser-&gt;parse();
+      std::cout &lt;&lt; "\n\n";
+    }</div>
+    catch(std::exception&amp; ex)
+    <button class="buttonClass" id="btn1234567891011121314" onclick="expandAndCollapse(1234567891011121314, id)">-</button><div class="buttonClass" id="1234567891011121314">{
+      std::cout &lt;&lt; "\n\n    " &lt;&lt; ex.what() &lt;&lt; "\n\n";
+    }</div>
+    std::cout &lt;&lt; "\n\n";
+  }</div>
+}</div>
+
+#endif
+
+</pre>
+</body> 
+</html> 

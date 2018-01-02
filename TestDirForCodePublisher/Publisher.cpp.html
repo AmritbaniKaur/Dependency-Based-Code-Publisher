@@ -1,0 +1,451 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<link href=1.StyleSheet.css rel="stylesheet" type="text/css"/> 
+<script  type="text/javascript" src=2.JavaScript.js></script></head> 
+<body> 
+<div id="titleHeader"> 
+<h1>Code Files with Dependencies</h1><div id="menuBar"> 
+<h3> Dependencies </h3><a href = "Publisher.h.html">Publisher.h</a><br/></div> 
+<pre id="matter">
+//////////////////////////////////////////////////////////////////////////////
+// Publisher.cpp	-	has definitions for the methods of Publisher and	//
+//						HTMLPublisher class									//
+// ver 1.0																	//
+//--------------------------------------------------------------------------//
+//	Language:		Visual C++ 2015, Visual Studio 2015 Community Edition	//
+//	Platform:		HP Envy x360, Core i7, Windows 10 Home					//
+//	Application:	CSE 687 Project #3, Spring 2017							//
+//	Author:			Amritbani Sondhi,										//
+//					Graduate Student, Syracuse University					//
+//					asondhi@syr.edu											//
+//////////////////////////////////////////////////////////////////////////////
+
+#include "Publisher.h"
+
+using namespace CodePublisher;
+using namespace FileSystem;
+using namespace Scanner;
+
+// finds #include dependencies, creates output html files (blank)
+bool CodePublisher::Publisher::createFilesAndFindDependencies()
+<button class="buttonClass" id="btn1" onclick="expandAndCollapse(1, id)">-</button><div class="buttonClass" id="1">{
+	// Open the input file
+	inFileStream.open(inputFileName.c_str());
+
+	if (inFileStream.fail()) <button class="buttonClass" id="btn12" onclick="expandAndCollapse(12, id)">-</button><div class="buttonClass" id="12">{
+		cout &lt;&lt; "Unable to open file" &lt;&lt; endl;
+		return false;
+	}</div>
+	else
+	<button class="buttonClass" id="btn123" onclick="expandAndCollapse(123, id)">-</button><div class="buttonClass" id="123">{
+		// find #include dependencies and saving it in vector: depFiles
+		checkFileDependencies();
+
+		// Create the output file
+		outputFileName = testDirectory + "/" + inputFileName + ".html";
+		outFileStream.open(outputFileName.c_str());
+		return true;
+	}</div>
+}</div>
+
+// creates HTML files and stores the data into it
+// accepts CSS and JScript file names as two optional fields
+void CodePublisher::Publisher::createHTMLFile(string css = "null", string jScript = "null")
+<button class="buttonClass" id="btn1234" onclick="expandAndCollapse(1234, id)">-</button><div class="buttonClass" id="1234">{
+	// Start all the HTML tags
+	outFileStream &lt;&lt; "&lt;!DOCTYPE html&gt; \n";
+	outFileStream &lt;&lt; "&lt;html&gt; \n";
+	createCompleteHeadTag(css, jScript);
+	createCompleteBodyTag();
+	outFileStream &lt;&lt; "&lt;/html&gt; \n";
+
+}</div>
+
+// creates HTML Head Tag to be added to the main HTML File
+void CodePublisher::Publisher::createCompleteHeadTag(string css, string jScript)
+<button class="buttonClass" id="btn12345" onclick="expandAndCollapse(12345, id)">-</button><div class="buttonClass" id="12345">{
+	outFileStream &lt;&lt; "&lt;head&gt; \n";
+
+	if (css!="null")
+	<button class="buttonClass" id="btn123456" onclick="expandAndCollapse(123456, id)">-</button><div class="buttonClass" id="123456">{
+		outFileStream &lt;&lt; "&lt;link href=";
+		outFileStream &lt;&lt; css;
+		outFileStream &lt;&lt;" rel=\"stylesheet\" type=\"text/css\"/&gt; \n"; //escape sequence for " is \"
+	}</div>
+
+	if(jScript!="null")
+	<button class="buttonClass" id="btn1234567" onclick="expandAndCollapse(1234567, id)">-</button><div class="buttonClass" id="1234567">{
+		outFileStream &lt;&lt; "&lt;script  type=\"text/javascript\" src=";
+		outFileStream &lt;&lt; jScript;
+		outFileStream &lt;&lt; "&gt;&lt;/script&gt;"; // yet to configure
+	}</div>
+	outFileStream &lt;&lt; "&lt;/head&gt; \n";
+}</div>
+
+// Creates Body Tag to be added to the main HTML File (has links to the dependency files as well)
+void CodePublisher::Publisher::createCompleteBodyTag()
+<button class="buttonClass" id="btn12345678" onclick="expandAndCollapse(12345678, id)">-</button><div class="buttonClass" id="12345678">{
+	outFileStream &lt;&lt; "&lt;body&gt; \n";
+
+	// Title
+	outFileStream &lt;&lt; "&lt;div id=\"titleHeader\"&gt; \n";
+	outFileStream &lt;&lt; "&lt;h1&gt;Code Files with Dependencies&lt;/h1&gt;";
+
+	// Showing the dependency files
+	outFileStream &lt;&lt; "&lt;div id=\"menuBar\"&gt; \n";
+	outFileStream &lt;&lt; "&lt;h3&gt; Dependencies &lt;/h3&gt;";
+	for (int i = 0; i &lt; depFiles.size(); i++) // have to add an onclick event
+	<button class="buttonClass" id="btn123456789" onclick="expandAndCollapse(123456789, id)">-</button><div class="buttonClass" id="123456789">{
+		outFileStream &lt;&lt; "&lt;a href = \"";
+		outFileStream &lt;&lt; depFiles[i] &lt;&lt; ".html";
+		outFileStream &lt;&lt; "\"&gt;";
+		outFileStream &lt;&lt; depFiles[i];
+		outFileStream &lt;&lt; "&lt;/a&gt;";
+		outFileStream &lt;&lt; "&lt;br/&gt;";
+	}</div>
+	outFileStream &lt;&lt; "&lt;/div&gt; \n";
+
+	// Showing all the code
+	outFileStream &lt;&lt; "&lt;pre id=\"matter\"&gt;" &lt;&lt; endl;
+	// Loop for getting all the characters in a fileStream
+	int count = 0;
+	stringstream val;
+
+	while (!inFileStream.eof())
+	<button class="buttonClass" id="btn12345678910" onclick="expandAndCollapse(12345678910, id)">-</button><div class="buttonClass" id="12345678910">{
+		inFileStream.get(characters);    // Get character
+							 // conditions for checking and replacing &lt; , &gt; , &amp;
+		if (characters == '&lt;') <button class="buttonClass" id="btn1234567891011" onclick="expandAndCollapse(1234567891011, id)">-</button><div class="buttonClass" id="1234567891011">{
+			outFileStream &lt;&lt; "&amp;lt;"; 		// Replacing &lt; with &amp;lt; 
+		}</div>
+		else if (characters == '&gt;') <button class="buttonClass" id="btn123456789101112" onclick="expandAndCollapse(123456789101112, id)">-</button><div class="buttonClass" id="123456789101112">{
+			outFileStream &lt;&lt; "&amp;gt;"; 		// Replacing &gt; with &amp;gt; 
+		}</div>
+		else if (characters == '&amp;')   // check for this in the html doc; else remove
+		<button class="buttonClass" id="btn12345678910111213" onclick="expandAndCollapse(12345678910111213, id)">-</button><div class="buttonClass" id="12345678910111213">{
+			outFileStream &lt;&lt; "&amp;amp;"; 		// Replacing &amp; with &amp;amp; 
+		}</div>
+		// also add the &lt;div&gt; tags if you find <button class="buttonClass" id="btn1234567891011121314" onclick="expandAndCollapse(1234567891011121314, id)">-</button><div class="buttonClass" id="1234567891011121314">{ and }</div>
+		else if(characters == '<button class="buttonClass" id="btn123456789101112131415" onclick="expandAndCollapse(123456789101112131415, id)">-</button><div class="buttonClass" id="123456789101112131415">{')
+		<button class="buttonClass" id="btn12345678910111213141516" onclick="expandAndCollapse(12345678910111213141516, id)">-</button><div class="buttonClass" id="12345678910111213141516">{
+			++count;
+			val.clear();
+			val &lt;&lt; count;
+			outFileStream &lt;&lt; "&lt;button class=\"buttonClass\" id=\"btn";
+			outFileStream &lt;&lt; val.str();
+			outFileStream &lt;&lt; "\" onclick=\"expandAndCollapse(";
+			outFileStream &lt;&lt; val.str();
+			outFileStream &lt;&lt; ", id";
+			outFileStream &lt;&lt; ")\"&gt;-&lt;/button&gt;&lt;div class=\"buttonClass\" id=\"";
+			outFileStream &lt;&lt; val.str();
+			outFileStream &lt;&lt; "\"&gt;<button class="buttonClass" id="btn1234567891011121314151617" onclick="expandAndCollapse(1234567891011121314151617, id)">-</button><div class="buttonClass" id="1234567891011121314151617">{";
+		}</div>
+		else if (characters == '}</div>;')
+		<button class="buttonClass" id="btn123456789101112131415161718" onclick="expandAndCollapse(123456789101112131415161718, id)">-</button><div class="buttonClass" id="123456789101112131415161718">{
+			outFileStream &lt;&lt; "}</div>;&lt;/div&gt;";
+		}</div>
+		else if (characters == '}</div>')
+		<button class="buttonClass" id="btn12345678910111213141516171819" onclick="expandAndCollapse(12345678910111213141516171819, id)">-</button><div class="buttonClass" id="12345678910111213141516171819">{
+			outFileStream &lt;&lt; "}</div>&lt;/div&gt;";
+		}</div>
+		else
+		<button class="buttonClass" id="btn1234567891011121314151617181920" onclick="expandAndCollapse(1234567891011121314151617181920, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920">{
+			outFileStream &lt;&lt; characters;
+		}</div>
+	}</div>
+	// End all the HTML tags
+	outFileStream &lt;&lt; "&lt;/pre&gt;" &lt;&lt; endl;
+	outFileStream &lt;&lt; "&lt;/body&gt; \n";
+}</div>
+
+// Close all the open file streams
+void CodePublisher::Publisher::closeAllOpenFiles()
+<button class="buttonClass" id="btn123456789101112131415161718192021" onclick="expandAndCollapse(123456789101112131415161718192021, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021">{
+	inFileStream.close();
+	outFileStream.close();
+}</div>
+
+// Check and get all the file dependencies in a vector : depFiles
+void CodePublisher::Publisher::checkFileDependencies()
+<button class="buttonClass" id="btn12345678910111213141516171819202122" onclick="expandAndCollapse(12345678910111213141516171819202122, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122">{
+	//Performing requirement 7
+	Toker tok;
+
+	if (!inFileStream.good())
+	<button class="buttonClass" id="btn1234567891011121314151617181920212223" onclick="expandAndCollapse(1234567891011121314151617181920212223, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223">{
+		std::cout &lt;&lt; "\n  can't open file " &lt;&lt; inputFileName &lt;&lt; "\n\n";
+	}</div>
+	else
+	<button class="buttonClass" id="btn123456789101112131415161718192021222324" onclick="expandAndCollapse(123456789101112131415161718192021222324, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324">{
+		std::cout &lt;&lt; "\n\t Processing File: \"" &lt;&lt; inputFileName &lt;&lt; "\"\n";
+	}</div>
+	tok.attach(&amp;inFileStream);
+	SemiExp semiEx(&amp;tok);
+
+	while (semiEx.get())
+	<button class="buttonClass" id="btn12345678910111213141516171819202122232425" onclick="expandAndCollapse(12345678910111213141516171819202122232425, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425">{
+		string exp = semiEx.show();
+		string include = "# include"; //searches for #include as well as # include
+
+		int pos = exp.find(include, 0);
+		if (pos != string::npos)
+		<button class="buttonClass" id="btn1234567891011121314151617181920212223242526" onclick="expandAndCollapse(1234567891011121314151617181920212223242526, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526">{
+			// skip 10 characters
+			string depFileName = exp.erase(0, 9);
+			string fileName = "";
+			int i = 0, startIndex = -1, endIndex = -1;
+			
+			while (depFileName[i] != '\0') 
+			<button class="buttonClass" id="btn123456789101112131415161718192021222324252627" onclick="expandAndCollapse(123456789101112131415161718192021222324252627, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627">{
+				if (depFileName[i] == '\"' &amp;&amp; startIndex == -1) <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728">{
+					startIndex = i;
+				}</div>
+				else if (depFileName[i] == '\"' &amp;&amp; endIndex == -1) <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829">{
+					endIndex = i;
+				}</div>
+				i++;
+			}</div>
+
+			if (startIndex &gt; -1 &amp;&amp; endIndex &lt; depFileName.length()) <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930">{
+				depFileName = depFileName.substr(startIndex + 1, endIndex - startIndex - 1);
+			}</div>
+			if (depFileName.find("/"))
+			<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031">{
+				std::size_t found = depFileName.find_last_of('/');
+				if (found != string::npos)
+					depFileName = depFileName.substr(found + 1, depFileName.length() - found);
+			}</div>
+			if (depFileName.find(".") == string::npos) <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132">{
+				depFileName = "";
+			}</div>
+			if (depFileName.length() &gt; 0)
+			<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233">{
+				depFiles.push_back(depFileName);
+			}</div>
+		}</div>
+	}</div>
+
+	//printing the dependent files
+	cout &lt;&lt; "\n\t\t" &lt;&lt; "Dependent Files: " &lt;&lt; endl;
+	for (int i = 0; i &lt; depFiles.size(); i++)
+	<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334">{
+		cout &lt;&lt; "\t\t" &lt;&lt; depFiles[i] &lt;&lt; endl;
+	}</div>
+
+	//// doesn't do anything as of now
+	//if (semiEx.length() &gt; 0) //May have collected tokens, but reached end of stream before finding SemiExp terminator.
+	//<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435">{
+	//	std::cout &lt;&lt; "\n  -- semiExpression --";
+	//	std::cout &lt;&lt; semiEx.show(true);
+	//}</div>
+
+	inFileStream.clear();
+	inFileStream.close();
+	inFileStream.open(inputFileName.c_str());
+}</div>
+
+// Gets Directory details, CSS and JS files and then calls to create an HTML file
+void CodePublisher::HTMLPublisher::startHTMLPublish(std::string inputFileName)
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536">{
+	Publisher codePublish;
+	codePublish.inputFileName = inputFileName;
+	//codePublish.inputFileName = "../TestFileForCodePublisher.h";
+	codePublish.testDirectory = "../TestDirForCodePublisher"; // by default
+
+	string cssFile = "";
+	string jQueryFile = "";
+
+	if (codePublish.createFilesAndFindDependencies())
+	<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637">{
+		codePublish.createHTMLFile("1.StyleSheet.css","2.JavaScript.js");
+		codePublish.closeAllOpenFiles();
+	}</div>
+
+	cout &lt;&lt; "\n \t File: " &lt;&lt; codePublish.inputFileName &lt;&lt; " is successfully converted." &lt;&lt; endl;
+	cout &lt;&lt; "\t HTML version of the file is: " &lt;&lt; codePublish.outputFileName &lt;&lt; endl;
+}</div>
+
+// takes Directory Path as an argument and converts all it's files into HTML
+void CodePublisher::HTMLPublisher::processDirectoryToHTML(string currentDir)
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738">{
+	Directory::setCurrentDirectory(currentDir);
+	
+	std::vector&lt;std::string&gt; currentFiles = Directory::getFiles(currentDir, "*.h"); // gets files in current directories
+	std::vector&lt;std::string&gt; currentCppFiles = Directory::getFiles(currentDir, "*.cpp");
+
+	for (size_t i = 0; i &lt; currentCppFiles.size(); ++i)
+	<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839">{
+		currentFiles.push_back(currentCppFiles[i]);	// currentFiles will contain all .cpp as well as .h files now
+	}</div>
+	//std::cout &lt;&lt; "Current Files:";
+	for (size_t i = 0; i&lt;currentFiles.size(); ++i)
+	<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940">{
+		//std::cout &lt;&lt; "\n    " &lt;&lt; currentFiles[i].c_str() &lt;&lt; endl;
+		startHTMLPublish(currentFiles[i]);
+	}</div>
+	std::cout &lt;&lt; "\n -------------------------------------------------------------------------------------";
+	std::cout &lt;&lt; "\n -------------------------------------------------------------------------------------";
+	std::cout &lt;&lt; "\n Current Directory: \n";
+	std::vector&lt;std::string&gt; currentDirs = Directory::getDirectories(); // gets current directories
+
+	auto iter = std::find(currentDirs.begin(), currentDirs.end(), ".");
+
+	if (iter != currentDirs.end())
+		currentDirs.erase(iter);
+
+	auto iter2 = std::find(currentDirs.begin(), currentDirs.end(), "..");
+	if (iter2 != currentDirs.end())
+		currentDirs.erase(iter2);
+
+	for (size_t i = 0; i&lt;currentDirs.size(); ++i)
+	<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041">{
+		std::cout &lt;&lt; "\n    " &lt;&lt; currentDirs[i].c_str();
+
+		string fullCurrentDir, curDir = currentDir;
+		fullCurrentDir = curDir.append("\\");
+		fullCurrentDir = fullCurrentDir.append(currentDirs[i].c_str());
+
+
+		//if (!directoryEnd(currentDir, "\\"))
+		//<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142">{
+		//	fullCurrentDir = currentDir.append("\\");
+		//	fullCurrentDir = fullCurrentDir.append(currentDirs[i].c_str());
+		//}</div>
+		//else
+		//<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243">{
+		//	fullCurrentDir = currentDir.append(currentDirs[i].c_str());
+		//}</div>
+		//std::cout &lt;&lt; fullCurrentDir;
+
+		processDirectoryToHTML(fullCurrentDir);
+	}</div>
+	//htmlPublish.startHTMLPublish();
+
+}</div>
+
+// checks if the end of directory contains '//' and if it does then returns true
+bool CodePublisher::HTMLPublisher::directoryEnd(std::string const &amp;dir, std::string end="\\")
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344">{
+	if (dir.length() &gt;= end.length()) 
+	<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445">{
+		return (0 == dir.compare(dir.length() - end.length(), end.length(), end));
+	}</div>
+	else 
+	<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546">{
+		return false;
+	}</div>
+}</div>
+
+//HtmlConfig CodePublisher::HTMLPublisher::getConfig()
+//<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647">{
+//	return config;
+//}</div>
+
+
+// TestExecutive.exe -o ..\TestDirForCodePublisher -i .. -p *.h *.cpp
+// processes command line arguments and saves the input, output directory and file patterns in HTMLPublisher's HTMLconfig struct
+void CodePublisher::HTMLPublisher::ProcessCommandLineArgs(int argc, char* argv[]) <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748">{
+
+	string input, output, page;
+	vector&lt;string&gt; patterns;
+	
+	for (int i = 1; i &lt; argc; i++) <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849">{
+		if (argv[i][0] == '-') <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950">{
+			switch (argv[i][1])
+			<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051">{
+			case 'o':
+				output = argv[i + 1];
+				break;
+			case 'p':
+				patterns.push_back(argv[i + 1]);
+				break;
+			case 'i':
+				input = argv[i + 1];
+				break;
+			case 'w':
+				page = argv[i + 1];
+				break;
+			default:
+				std::cout &lt;&lt; "Invalid / Directories Not Specified";
+				break;
+			}</div>
+		}</div>
+	}</div>
+
+	// input Directory should always exist
+	// if output directory doesn't exist, create
+	if (!Directory::exists(output) &amp;&amp; Directory::exists(input))
+	<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152">{
+		if (!Directory::create(output))
+		<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253">{
+			// if it is still not able to create, ouptut directory will be specified
+			// same as input directory
+			output = input;
+		}</div>
+		else
+		<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354">{
+			// ouput directory created
+			cout &lt;&lt; "ouput directory created";
+		}</div>
+	}</div>
+
+	// input directory and webpage must be specified
+	// you can do it by appending -i &lt;directory name&gt; in the command line arguments
+	if (!Directory::exists(input))
+	<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455">{
+		std::cout &lt;&lt; "Invalid / Directories Not Specified";
+	}</div>
+
+	// when both the directories are configured, save it to HTMLPublisher class
+	if (Directory::exists(input) &amp;&amp; Directory::exists(output))
+	<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556">{
+		config.inputDirectory = input;
+		config.outputDirectory = output;
+		config.patterns = patterns;
+		config.openWebPage = page;
+	}</div>
+}</div>
+
+// runs Shell to open a page in the browser
+void CodePublisher::HTMLPublisher::openPage(string openPage) 
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657">{
+	string outputDirectory = this-&gt;config.outputDirectory;
+	outputDirectory = FileSystem::Path::getFullFileSpec(outputDirectory);
+	string pageToOpen = outputDirectory + "\\" + openPage;
+	//string p_ = FileSystem::Path::getFullFileSpec(pageToOpen);
+	if (FileSystem::File::exists(pageToOpen))
+	<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758">{
+		const char * file = pageToOpen.c_str();
+		std::wstring sPath(pageToOpen.begin(), pageToOpen.end());
+		ShellExecute(NULL, "open", (LPCSTR)sPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
+		//ShellExecute(NULL, L"open", (LPCWSTR)file, NULL, NULL, SW_SHOWNORMAL);
+	}</div>
+}</div>
+
+#ifdef TEST_PUBLISHER
+
+int main(int argc, char* argv[])
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859">{
+	std::cout &lt;&lt; "\n  Testing CodePublisher class";
+	std::cout &lt;&lt; "\n ============================= \n\n";
+
+	HTMLPublisher htmlPublish;
+	
+	//Directory::setCurrentDirectory("..");
+	Directory::setCurrentDirectory(this-&gt;config.inputDirectory);
+
+	// gets contents of current directory
+	string currentDir = Directory::getCurrentDirectory(); // gets current directory
+	
+	htmlPublish.processDirectoryToHTML(currentDir);
+
+	std::cout &lt;&lt; "\n\n";
+	std::system("pause");
+	return 0;
+}</div>
+#endif // TEST_PUBLISHER
+
+</pre>
+</body> 
+</html> 

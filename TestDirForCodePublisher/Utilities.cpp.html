@@ -1,0 +1,163 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<link href=1.StyleSheet.css rel="stylesheet" type="text/css"/> 
+<script  type="text/javascript" src=2.JavaScript.js></script></head> 
+<body> 
+<div id="titleHeader"> 
+<h1>Code Files with Dependencies</h1><div id="menuBar"> 
+<h3> Dependencies </h3><a href = "Utilities.h.html">Utilities.h</a><br/></div> 
+<pre id="matter">
+///////////////////////////////////////////////////////////////////////
+// Utilities.cpp - small, generally usefule, helper classes          //
+// ver 1.4                                                           //
+// Language:    C++, Visual Studio 2015                              //
+// Platform:    Dell XPS 8900, Windows 10                            //
+// Application: Most Projects, CSE687 - Object Oriented Design       //
+// Author:      Jim Fawcett, Syracuse University, CST 4-187          //
+//              jfawcett@twcny.rr.com                                //
+///////////////////////////////////////////////////////////////////////
+
+//#include &lt;cctype&gt;
+#include &lt;iostream&gt;
+#include &lt;iomanip&gt;
+#include &lt;locale&gt;
+#include &lt;clocale&gt;
+#include "Utilities.h"
+
+using namespace Utilities;
+
+/*
+*  Note: 
+*  The std::string src argument must be pass by value so that we can pass
+*  std::ostringstream.out() to the first argument and std::ostringstream out
+*  to the last argument, e.g., the same std::ostringstream object for both
+*  arguments.  Otherwise we attempt to insert out's string into itself.
+*/
+void StringHelper::Title(std::string src, std::ostream&amp; out)
+<button class="buttonClass" id="btn1" onclick="expandAndCollapse(1, id)">-</button><div class="buttonClass" id="1">{
+  out &lt;&lt; "\n  " &lt;&lt; src;
+  out &lt;&lt; "\n " &lt;&lt; std::string(src.size() + 2, '=');
+}</div>
+
+void StringHelper::Title(std::string src, std::ostringstream&amp; out)
+<button class="buttonClass" id="btn12" onclick="expandAndCollapse(12, id)">-</button><div class="buttonClass" id="12">{
+  out.str("");
+  out &lt;&lt; "\n  " &lt;&lt; src;
+  out &lt;&lt; "\n " &lt;&lt; std::string(src.size() + 2, '=');
+}</div>
+
+void StringHelper::title(std::string src, std::ostream&amp; out)
+<button class="buttonClass" id="btn123" onclick="expandAndCollapse(123, id)">-</button><div class="buttonClass" id="123">{
+  out &lt;&lt; "\n  " &lt;&lt; src;
+  out &lt;&lt; "\n " &lt;&lt; std::string(src.size() + 2, '-');
+}</div>
+
+void StringHelper::title(std::string src, std::ostringstream&amp; out)
+<button class="buttonClass" id="btn1234" onclick="expandAndCollapse(1234, id)">-</button><div class="buttonClass" id="1234">{
+  out.str("");
+  out &lt;&lt; "\n  " &lt;&lt; src;
+  out &lt;&lt; "\n " &lt;&lt; std::string(src.size() + 2, '-');
+}</div>
+
+void StringHelper::sTitle(std::string src, size_t offset, size_t width, std::ostream&amp; out, char underline)
+<button class="buttonClass" id="btn12345" onclick="expandAndCollapse(12345, id)">-</button><div class="buttonClass" id="12345">{
+  if (width &lt; src.size())
+    width = src.size();
+  size_t lwidth = (width - src.size()) / 2;
+  out &lt;&lt; "\n  " &lt;&lt; std::setw(offset) &lt;&lt; "" &lt;&lt; std::setw(lwidth) &lt;&lt; " " &lt;&lt; src;
+  out &lt;&lt; "\n " &lt;&lt; std::setw(offset) &lt;&lt; "" &lt;&lt; std::string(width + 2, underline);
+}</div>
+
+void StringHelper::sTitle(std::string src, size_t offset, size_t width, std::ostringstream&amp; out, char underline)
+<button class="buttonClass" id="btn123456" onclick="expandAndCollapse(123456, id)">-</button><div class="buttonClass" id="123456">{
+  out.str("");
+  if (width &lt; src.size())
+    width = src.size();
+  size_t lwidth = (width - src.size()) / 2;
+  out &lt;&lt; "\n  " &lt;&lt; std::setw(offset) &lt;&lt; "" &lt;&lt; std::setw(lwidth) &lt;&lt; " " &lt;&lt; src;
+  out &lt;&lt; "\n " &lt;&lt; std::setw(offset) &lt;&lt; "" &lt;&lt; std::string(width + 2, underline);
+}</div>
+
+std::vector&lt;std::string&gt; StringHelper::split(const std::string&amp; src)
+<button class="buttonClass" id="btn1234567" onclick="expandAndCollapse(1234567, id)">-</button><div class="buttonClass" id="1234567">{
+  std::vector&lt;std::string&gt; accum;
+  std::string temp;
+  std::locale loc;
+  size_t index = 0;
+  do
+  <button class="buttonClass" id="btn12345678" onclick="expandAndCollapse(12345678, id)">-</button><div class="buttonClass" id="12345678">{
+    while ((isspace(src[index], loc) || src[index] == ',') &amp;&amp; src[index] != '\n')
+    <button class="buttonClass" id="btn123456789" onclick="expandAndCollapse(123456789, id)">-</button><div class="buttonClass" id="123456789">{
+      ++index;
+      if (temp.size() &gt; 0)
+      <button class="buttonClass" id="btn12345678910" onclick="expandAndCollapse(12345678910, id)">-</button><div class="buttonClass" id="12345678910">{
+        accum.push_back(temp);
+        temp.clear();
+      }</div>
+    }</div>
+    if(src[index] != '\0')
+      temp += src[index];
+  }</div> while (index++ &lt; src.size());
+  if(temp.size() &gt; 0)
+    accum.push_back(temp);
+  return accum;
+}</div>
+
+void Utilities::putline()
+<button class="buttonClass" id="btn1234567891011" onclick="expandAndCollapse(1234567891011, id)">-</button><div class="buttonClass" id="1234567891011">{
+  std::cout &lt;&lt; "\n";
+}</div>
+
+
+#ifdef TEST_UTILITIES
+
+using Utils = Utilities::StringHelper;
+
+int main()
+<button class="buttonClass" id="btn123456789101112" onclick="expandAndCollapse(123456789101112, id)">-</button><div class="buttonClass" id="123456789101112">{
+  Utils::Title("Testing Utilities Package");
+  putline();
+
+  Utils::title("test StringHelper::split(std::string)");
+
+  std::string test = "a, \n, bc, de, efg, i, j k lm nopq rst";
+  std::cout &lt;&lt; "\n  test string = " &lt;&lt; test;
+  
+  std::vector&lt;std::string&gt; result = StringHelper::split(test);
+  
+  std::cout &lt;&lt; "\n";
+  for (auto item : result)
+  <button class="buttonClass" id="btn12345678910111213" onclick="expandAndCollapse(12345678910111213, id)">-</button><div class="buttonClass" id="12345678910111213">{
+    if (item == "\n")
+      std::cout &lt;&lt; "\n  " &lt;&lt; "newline";
+    else
+      std::cout &lt;&lt; "\n  " &lt;&lt; item;
+  }</div>
+  std::cout &lt;&lt; "\n";
+
+  Utils::title("test std::string Converter&lt;T&gt;::toString(T)");
+
+  std::string conv1 = Converter&lt;double&gt;::toString(3.1415927);
+  std::string conv2 = Converter&lt;int&gt;::toString(73);
+  std::string conv3 = Converter&lt;std::string&gt;::toString("a_test_string plus more");
+
+  std::cout &lt;&lt; "\n  Converting from values to strings: ";
+  std::cout &lt;&lt; conv1 &lt;&lt; ", " &lt;&lt; conv2 &lt;&lt; ", " &lt;&lt; conv3;
+  putline();
+
+  Utils::title("test T Converter&lt;T&gt;::toValue(std::string)");
+
+  std::cout &lt;&lt; "\n  Converting from strings to values: ";
+  std::cout &lt;&lt; Converter&lt;double&gt;::toValue(conv1) &lt;&lt; ", ";
+  std::cout &lt;&lt; Converter&lt;int&gt;::toValue(conv2) &lt;&lt; ", ";
+  std::cout &lt;&lt; Converter&lt;std::string&gt;::toValue(conv3);
+
+  std::cout &lt;&lt; "\n\n";
+  return 0;
+}</div>
+#endif
+
+</pre>
+</body> 
+</html> 

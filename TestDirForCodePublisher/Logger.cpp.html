@@ -1,0 +1,206 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<link href=1.StyleSheet.css rel="stylesheet" type="text/css"/> 
+<script  type="text/javascript" src=2.JavaScript.js></script></head> 
+<body> 
+<div id="titleHeader"> 
+<h1>Code Files with Dependencies</h1><div id="menuBar"> 
+<h3> Dependencies </h3><a href = " < windows . h > .html"> < windows . h > </a><br/><a href = "Logger.h.html">Logger.h</a><br/><a href = "Utilities.h.html">Utilities.h</a><br/></div> 
+<pre id="matter">
+/////////////////////////////////////////////////////////////////////
+// Logger.cpp - log text messages to std::ostream                  //
+// ver 1.2                                                         //
+//-----------------------------------------------------------------//
+// Jim Fawcett (c) copyright 2015                                  //
+// All rights granted provided this copyright notice is retained   //
+//-----------------------------------------------------------------//
+// Language:    C++, Visual Studio 2015                            //
+// Application: Several Projects, CSE687 - Object Oriented Design  //
+// Author:      Jim Fawcett, Syracuse University, CST 4-187        //
+//              jfawcett@twcny.rr.com                              //
+/////////////////////////////////////////////////////////////////////
+
+#include &lt;functional&gt;
+#include &lt;fstream&gt;
+#include &lt;windows.h&gt;
+#include "Logger.h"
+#include "../Utilities/Utilities.h"
+
+using namespace Logging;
+
+//----&lt; send text message to std::ostream &gt;--------------------------
+
+void Logger::write(const std::string&amp; msg)
+<button class="buttonClass" id="btn1" onclick="expandAndCollapse(1, id)">-</button><div class="buttonClass" id="1">{
+  if(_ThreadRunning)
+    _queue.enQ(msg);
+}</div>
+void Logger::title(const std::string&amp; msg, char underline)
+<button class="buttonClass" id="btn12" onclick="expandAndCollapse(12, id)">-</button><div class="buttonClass" id="12">{
+  std::string temp = "\n  " + msg + "\n " + std::string(msg.size() + 2, underline);
+  write(temp);
+}</div>
+//----&lt; attach logger to existing std::ostream &gt;---------------------
+
+void Logger::attach(std::ostream* pOut) 
+<button class="buttonClass" id="btn123" onclick="expandAndCollapse(123, id)">-</button><div class="buttonClass" id="123">{ 
+  streams_.push_back(pOut);
+  //_pOut = pOut; 
+}</div>
+//----&lt; start logging &gt;----------------------------------------------
+/*
+ *  log to all the attached streams
+ */
+void Logger::start()
+<button class="buttonClass" id="btn1234" onclick="expandAndCollapse(1234, id)">-</button><div class="buttonClass" id="1234">{
+  if (_ThreadRunning)
+    return;
+  _ThreadRunning = true;
+  std::function&lt;void()&gt; tp = [=]() <button class="buttonClass" id="btn12345" onclick="expandAndCollapse(12345, id)">-</button><div class="buttonClass" id="12345">{
+    while (true)
+    <button class="buttonClass" id="btn123456" onclick="expandAndCollapse(123456, id)">-</button><div class="buttonClass" id="123456">{
+      std::string msg = _queue.deQ();
+      if (msg == "quit")
+      <button class="buttonClass" id="btn1234567" onclick="expandAndCollapse(1234567, id)">-</button><div class="buttonClass" id="1234567">{
+        _ThreadRunning = false;
+        break;
+      }</div>
+      for (auto pStrm : streams_)
+      <button class="buttonClass" id="btn12345678" onclick="expandAndCollapse(12345678, id)">-</button><div class="buttonClass" id="12345678">{
+        *pStrm &lt;&lt; msg;
+      }</div>
+    }</div>
+  }</div>;
+  _pThr = new std::thread (tp);
+  //thr.detach();
+}</div>
+//----&lt; has logger been started? &gt;-----------------------------------
+
+bool Logger::running()
+<button class="buttonClass" id="btn123456789" onclick="expandAndCollapse(123456789, id)">-</button><div class="buttonClass" id="123456789">{
+  return _ThreadRunning;
+}</div>
+//----&lt; suspend logger &gt;---------------------------------------------
+
+void Logger::pause(bool doPause)
+<button class="buttonClass" id="btn12345678910" onclick="expandAndCollapse(12345678910, id)">-</button><div class="buttonClass" id="12345678910">{
+  if (doPause)
+  <button class="buttonClass" id="btn1234567891011" onclick="expandAndCollapse(1234567891011, id)">-</button><div class="buttonClass" id="1234567891011">{
+    _Paused = true;
+    ::SuspendThread(_pThr-&gt;native_handle());
+  }</div>
+  else
+  <button class="buttonClass" id="btn123456789101112" onclick="expandAndCollapse(123456789101112, id)">-</button><div class="buttonClass" id="123456789101112">{
+    _Paused = false;
+    ::ResumeThread(_pThr-&gt;native_handle());
+  }</div>
+}</div>
+//----&lt; is logger currently paused? &gt;--------------------------------
+
+bool Logger::paused()
+<button class="buttonClass" id="btn12345678910111213" onclick="expandAndCollapse(12345678910111213, id)">-</button><div class="buttonClass" id="12345678910111213">{
+  return _Paused;
+}</div>
+//----&lt; wait for logging to empty input queue &gt;----------------------
+
+void Logger::flush()
+<button class="buttonClass" id="btn1234567891011121314" onclick="expandAndCollapse(1234567891011121314, id)">-</button><div class="buttonClass" id="1234567891011121314">{
+  if (_ThreadRunning &amp;&amp; !_Paused)
+  <button class="buttonClass" id="btn123456789101112131415" onclick="expandAndCollapse(123456789101112131415, id)">-</button><div class="buttonClass" id="123456789101112131415">{
+    while (_queue.size() &gt; 0)
+      ;
+    for (auto pStream : streams_)
+      pStream-&gt;flush();
+  }</div>
+}</div>
+//----&lt; stop logging &gt;-----------------------------------------------
+
+void Logger::stop(const std::string&amp; msg)
+<button class="buttonClass" id="btn12345678910111213141516" onclick="expandAndCollapse(12345678910111213141516, id)">-</button><div class="buttonClass" id="12345678910111213141516">{
+  if (_ThreadRunning)
+  <button class="buttonClass" id="btn1234567891011121314151617" onclick="expandAndCollapse(1234567891011121314151617, id)">-</button><div class="buttonClass" id="1234567891011121314151617">{
+    if(msg != "")
+      write(msg);
+    write("quit");    // request thread to stop
+    if (_pThr-&gt;joinable())
+      _pThr-&gt;join();  // wait for queue to empty
+
+    _ThreadRunning = false;
+  }</div>
+}</div>
+//----&lt; wait for logger to finish &gt;----------------------------------
+
+void Logger::wait()
+<button class="buttonClass" id="btn123456789101112131415161718" onclick="expandAndCollapse(123456789101112131415161718, id)">-</button><div class="buttonClass" id="123456789101112131415161718">{
+  if (_ThreadRunning &amp;&amp; _pThr-&gt;joinable())
+    _pThr-&gt;join();
+}</div>
+//----&lt; stop logging thread &gt;----------------------------------------
+
+Logger::~Logger()
+<button class="buttonClass" id="btn12345678910111213141516171819" onclick="expandAndCollapse(12345678910111213141516171819, id)">-</button><div class="buttonClass" id="12345678910111213141516171819">{
+  stop();
+}</div>
+
+struct Cosmetic
+<button class="buttonClass" id="btn1234567891011121314151617181920" onclick="expandAndCollapse(1234567891011121314151617181920, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920">{
+  ~Cosmetic() <button class="buttonClass" id="btn123456789101112131415161718192021" onclick="expandAndCollapse(123456789101112131415161718192021, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021">{ std::cout &lt;&lt; "\n\n"; }</div>
+}</div> cosmetic;
+
+#ifdef TEST_LOGGER
+
+using Util = Utilities::StringHelper;
+
+int main()
+<button class="buttonClass" id="btn12345678910111213141516171819202122" onclick="expandAndCollapse(12345678910111213141516171819202122, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122">{
+  //Util::Title("Testing Logger Class");
+  Logger log;
+  log.attach(&amp;std::cout);
+  std::ofstream out("logFile.txt");
+  if (out.good())
+    log.attach(&amp;out);
+  else
+    std::cout &lt;&lt; "\n  couldn't open logFile for writing";
+  log.write("\n  won't get logged - not started yet");
+  log.start();
+  log.title("Testing Logger Class", '=');
+  log.write("\n  one");
+  log.write("\n  two");
+  log.write("\n  fini");
+  log.stop();
+  log.write("\n  won't get logged - stopped");
+  log.start();
+  log.write("\n  starting again");
+  log.write("\n  and stopping again");
+  log.stop("\n  log terminating now");
+  log.wait();
+
+  StaticLogger&lt;1&gt;::attach(&amp;std::cout);
+  StaticLogger&lt;1&gt;::attach(&amp;out);
+  StaticLogger&lt;1&gt;::start();
+  StaticLogger&lt;1&gt;::write("\n");
+  StaticLogger&lt;1&gt;::title("Testing StaticLogger class");
+  StaticLogger&lt;1&gt;::write("\n  static logger at work");
+  Logger&amp; logger = StaticLogger&lt;1&gt;::instance();
+  logger.write("\n  static logger still at work");
+
+  for(size_t i=0; i&lt;5; ++i)
+    logger.write("\n  a log msg");
+  logger.write("\n  suspending logger");
+  logger.pause(true);
+  for (size_t i = 0; i&lt;5; ++i)
+    logger.write("\n  a log msg written while log suspended");
+
+  logger.pause(false);
+  logger.write("\n  a log msg written after log resumed");
+  logger.stop("\n  stopping static logger");
+  logger.wait();
+  out.close();
+}</div>
+
+#endif
+
+</pre>
+</body> 
+</html> 

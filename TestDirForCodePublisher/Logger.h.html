@@ -1,0 +1,133 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<link href=1.StyleSheet.css rel="stylesheet" type="text/css"/> 
+<script  type="text/javascript" src=2.JavaScript.js></script></head> 
+<body> 
+<div id="titleHeader"> 
+<h1>Code Files with Dependencies</h1><div id="menuBar"> 
+<h3> Dependencies </h3><a href = "Cpp11-BlockingQueue.h.html">Cpp11-BlockingQueue.h</a><br/></div> 
+<pre id="matter">
+#ifndef LOGGER_H
+#define LOGGER_H
+/////////////////////////////////////////////////////////////////////
+// Logger.h - log text messages to std::ostream                    //
+// ver 1.2                                                         //
+//-----------------------------------------------------------------//
+// Jim Fawcett (c) copyright 2015                                  //
+// All rights granted provided this copyright notice is retained   //
+//-----------------------------------------------------------------//
+// Language:    C++, Visual Studio 2015                            //
+// Application: Several Projects, CSE687 - Object Oriented Design  //
+// Author:      Jim Fawcett, Syracuse University, CST 4-187        //
+//              jfawcett@twcny.rr.com                              //
+/////////////////////////////////////////////////////////////////////
+/*
+* Package Operations:
+* -------------------
+* This package supports logging for multiple concurrent clients to a
+* single std::ostream.  It does this be enqueuing messages in a
+* blocking queue and dequeuing with a single thread that writes to
+* the std::ostream.
+*
+* It provides two logging classes, a non-template Logger class with 
+* instance methods, and a template class StaticLogger&lt;int&gt; with static 
+* methods.
+*
+* In most of my code I use the following definitions:
+* 
+*   using Rslt = StaticLogger&lt;0&gt;;    // show program results
+*   using Demo = StaticLogger&lt;1&gt;;    // show demonstration outputs
+*   using Dbug = StaticLogger&lt;2&gt;;    // show debugging outputs
+*
+* That allows a user to determine the kinds of outputs the program
+* presents based on which of these loggers are started, e.g., by
+* changing only a couple of lines of code.
+*
+* Build Process:
+* --------------
+* Required Files: Logger.h, Logger.cpp, Utilities.h, Utilities.cpp
+*
+* Build Command: devenv logger.sln /rebuild debug
+*
+* Maintenance History:
+* --------------------
+* ver 1.2 : 27 Aug 2016
+* - added flushing of streams in Logger::flush()
+* - call thread join on stop instead of spin locking
+* ver 1.1 : 06 Aug 2016
+* - added member function flush() to wait for output to complete
+* ver 1.0 : 22 Feb 2016
+* - first release
+*
+* Planned Additions and Changes:
+* ------------------------------
+* - fix pause locking
+*/
+
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+#include &lt;vector&gt;
+#include &lt;thread&gt;
+#include "../Cpp11-BlockingQueue/Cpp11-BlockingQueue.h"
+
+namespace Logging
+<button class="buttonClass" id="btn1" onclick="expandAndCollapse(1, id)">-</button><div class="buttonClass" id="1">{
+  class Logger
+  <button class="buttonClass" id="btn12" onclick="expandAndCollapse(12, id)">-</button><div class="buttonClass" id="12">{
+  public:
+    Logger() <button class="buttonClass" id="btn123" onclick="expandAndCollapse(123, id)">-</button><div class="buttonClass" id="123">{}</div>
+    void attach(std::ostream* pOut);
+    void start();
+    bool running();
+    void pause(bool doPause);
+    bool paused();
+    void flush();
+    void stop(const std::string&amp; msg = "");
+    void wait();
+    void write(const std::string&amp; msg);
+    void title(const std::string&amp; msg, char underline = '-');
+    ~Logger();
+    Logger(const Logger&amp;) = delete;
+    Logger&amp; operator=(const Logger&amp;) = delete;
+  private:
+    std::thread* _pThr;
+    std::vector&lt;std::ostream*&gt; streams_;
+    Async::BlockingQueue&lt;std::string&gt; _queue;
+    bool _ThreadRunning = false;
+    bool _Paused = false;
+  }</div>;
+
+  template&lt;int i&gt;
+  class StaticLogger
+  <button class="buttonClass" id="btn1234" onclick="expandAndCollapse(1234, id)">-</button><div class="buttonClass" id="1234">{
+  public:
+    static void attach(std::ostream* pOut) <button class="buttonClass" id="btn12345" onclick="expandAndCollapse(12345, id)">-</button><div class="buttonClass" id="12345">{ _logger.attach(pOut); }</div>
+    static void start() <button class="buttonClass" id="btn123456" onclick="expandAndCollapse(123456, id)">-</button><div class="buttonClass" id="123456">{ _logger.start(); }</div>
+    static bool running() <button class="buttonClass" id="btn1234567" onclick="expandAndCollapse(1234567, id)">-</button><div class="buttonClass" id="1234567">{ return _logger.running(); }</div>
+    static void pause(bool doPause) <button class="buttonClass" id="btn12345678" onclick="expandAndCollapse(12345678, id)">-</button><div class="buttonClass" id="12345678">{ _logger.pause(doPause); }</div>
+    static void paused() <button class="buttonClass" id="btn123456789" onclick="expandAndCollapse(123456789, id)">-</button><div class="buttonClass" id="123456789">{ return _logger.paused(); }</div>
+    static void flush() <button class="buttonClass" id="btn12345678910" onclick="expandAndCollapse(12345678910, id)">-</button><div class="buttonClass" id="12345678910">{ _logger.flush(); }</div>
+    static void stop(const std::string&amp; msg = "") <button class="buttonClass" id="btn1234567891011" onclick="expandAndCollapse(1234567891011, id)">-</button><div class="buttonClass" id="1234567891011">{ _logger.stop(msg); }</div>
+    static void wait() <button class="buttonClass" id="btn123456789101112" onclick="expandAndCollapse(123456789101112, id)">-</button><div class="buttonClass" id="123456789101112">{ _logger.wait(); }</div>
+    static void write(const std::string&amp; msg) <button class="buttonClass" id="btn12345678910111213" onclick="expandAndCollapse(12345678910111213, id)">-</button><div class="buttonClass" id="12345678910111213">{ _logger.write(msg); }</div>
+    static void title(const std::string&amp; msg, char underline = '-') <button class="buttonClass" id="btn1234567891011121314" onclick="expandAndCollapse(1234567891011121314, id)">-</button><div class="buttonClass" id="1234567891011121314">{ _logger.title(msg, underline); }</div>
+    static Logger&amp; instance() <button class="buttonClass" id="btn123456789101112131415" onclick="expandAndCollapse(123456789101112131415, id)">-</button><div class="buttonClass" id="123456789101112131415">{ return _logger; }</div>
+    StaticLogger(const StaticLogger&amp;) = delete;
+    StaticLogger&amp; operator=(const StaticLogger&amp;) = delete;
+  private:
+    static Logger _logger;
+  }</div>;
+
+  template&lt;int i&gt;
+  Logger StaticLogger&lt;i&gt;::_logger;
+
+  using Rslt = Logging::StaticLogger&lt;0&gt;;
+  using Demo = Logging::StaticLogger&lt;1&gt;;
+  using Dbug = Logging::StaticLogger&lt;2&gt;;
+}</div>
+#endif
+
+</pre>
+</body> 
+</html> 

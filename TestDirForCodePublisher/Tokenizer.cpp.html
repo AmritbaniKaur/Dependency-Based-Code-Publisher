@@ -1,0 +1,759 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<link href=1.StyleSheet.css rel="stylesheet" type="text/css"/> 
+<script  type="text/javascript" src=2.JavaScript.js></script></head> 
+<body> 
+<div id="titleHeader"> 
+<h1>Code Files with Dependencies</h1><div id="menuBar"> 
+<h3> Dependencies </h3><a href = "Tokenizer.h.html">Tokenizer.h</a><br/><a href = "..\Utilities\Utilities.h.html">..\Utilities\Utilities.h</a><br/></div> 
+<pre id="matter">
+/////////////////////////////////////////////////////////////////////
+// Tokenizer.cpp - read words from a std::stream                   //
+// ver 4.2                                                         //
+// Language:    C++, Visual Studio 2015                            //
+// Platform:    Dell XPS 8900, Windows 10                          //
+// Application: Parser component, CSE687 - Object Oriented Design  //
+// Author:      Jim Fawcett, Syracuse University, CST 4-187        //
+//              jfawcett@twcny.rr.com                              //
+/////////////////////////////////////////////////////////////////////
+
+#include &lt;iostream&gt;
+#include &lt;locale&gt;
+#include &lt;string&gt;
+#include &lt;vector&gt;
+#include "Tokenizer.h"
+#include "..\Utilities\Utilities.h"
+
+namespace Scanner
+<button class="buttonClass" id="btn1" onclick="expandAndCollapse(1, id)">-</button><div class="buttonClass" id="1">{
+  ///////////////////////////////////////////////////////////////////
+  // Context is a shared data storage facility.
+  /*
+   * - with Context we don't need static members to share
+   *   state pointes etc.  Context holds and shares all that.
+   * - Context is an entirely private facility used by ConsumeState
+   *   and its derived instances, so there is no need for encapsulation
+   *   and we use a struct.  This won't be appropriate if we handed
+   *   the context to clients of Toker.
+   */
+  struct Context
+  <button class="buttonClass" id="btn12" onclick="expandAndCollapse(12, id)">-</button><div class="buttonClass" id="12">{
+    Context();
+    ~Context();
+    std::string token;
+    std::istream* _pIn;
+    std::vector&lt;std::string&gt; _oneCharTokens =
+    <button class="buttonClass" id="btn123" onclick="expandAndCollapse(123, id)">-</button><div class="buttonClass" id="123">{
+      "\n", "&lt;", "&gt;", "<button class="buttonClass" id="btn1234" onclick="expandAndCollapse(1234, id)">-</button><div class="buttonClass" id="1234">{", "}</div>", "[", "]", "(", ")", ":", ";", " = ", " + ", " - ", "*", ".", ",", "@"
+    }</div>;
+    std::vector&lt;std::string&gt; _twoCharTokens =
+    <button class="buttonClass" id="btn12345" onclick="expandAndCollapse(12345, id)">-</button><div class="buttonClass" id="12345">{
+      "&lt;&lt;", "&gt;&gt;", "::", "++", "--", "==", "+=", "-=", "*=", "/="
+    }</div>;
+    int prevChar;
+    int currChar;
+    bool _doReturnComments;
+    bool inCSharpString = false;
+    size_t _lineCount;
+    ConsumeState* _pState;
+    ConsumeState* _pEatCppComment;
+    ConsumeState* _pEatCComment;
+    ConsumeState* _pEatWhitespace;
+    ConsumeState* _pEatPunctuator;
+    ConsumeState* _pEatAlphanum;
+    ConsumeState* _pEatSpecialCharacters;
+    ConsumeState* _pEatDQString;
+    ConsumeState* _pEatSQString;
+    ConsumeState* _pEatRawCppString;
+    ConsumeState* _pEatRawCSharpString;
+  }</div>;
+
+  ///////////////////////////////////////////////////////////////////
+  // private ConsumeState worker class
+  /*
+   *   Nota Bene:
+   *   - At exit the eatChars() member should return with
+   *     currChar set to the first non-state character.
+   *   - Each derived class must insure that this condition
+   *     is meet.
+   */
+  class ConsumeState
+  <button class="buttonClass" id="btn123456" onclick="expandAndCollapse(123456, id)">-</button><div class="buttonClass" id="123456">{
+    friend class Toker;
+  public:
+    using Token = std::string;
+    ConsumeState();
+    ConsumeState(const ConsumeState&amp;) = delete;
+    ConsumeState&amp; operator=(const ConsumeState&amp;) = delete;
+    virtual ~ConsumeState();
+    void attach(std::istream* pIn);
+    virtual void eatChars() = 0;
+    void consumeChars() <button class="buttonClass" id="btn1234567" onclick="expandAndCollapse(1234567, id)">-</button><div class="buttonClass" id="1234567">{
+      _pContext-&gt;_pState-&gt;eatChars();
+      _pContext-&gt;_pState = nextState();
+    }</div>
+    bool canRead() <button class="buttonClass" id="btn12345678" onclick="expandAndCollapse(12345678, id)">-</button><div class="buttonClass" id="12345678">{ return _pContext-&gt;_pIn-&gt;good(); }</div>
+    std::string getTok() <button class="buttonClass" id="btn123456789" onclick="expandAndCollapse(123456789, id)">-</button><div class="buttonClass" id="123456789">{ return _pContext-&gt;token; }</div>
+    bool hasTok() <button class="buttonClass" id="btn12345678910" onclick="expandAndCollapse(12345678910, id)">-</button><div class="buttonClass" id="12345678910">{ return _pContext-&gt;token.size() &gt; 0; }</div>
+    ConsumeState* nextState();
+    void returnComments(bool doReturnComments = false);
+    size_t currentLineCount();
+    void setSpecialTokens(const std::string&amp; commaSeparatedString);
+    void setContext(Context* pContext);
+  protected:
+    Context* _pContext;
+    bool collectChar();
+    bool isOneCharToken(Token tok);
+    bool isTwoCharToken(Token tok);
+    Token makeString(int ch);
+  }</div>;
+}</div>
+
+using namespace Scanner;
+using Token = std::string;
+
+//----&lt; used by Toker to provide Consumer with Context ptr &gt;---------
+
+void ConsumeState::setContext(Context* pContext)
+<button class="buttonClass" id="btn1234567891011" onclick="expandAndCollapse(1234567891011, id)">-</button><div class="buttonClass" id="1234567891011">{
+  _pContext = pContext;
+}</div>
+//----&lt; attach or re-attach to input stream &gt;------------------------
+
+void ConsumeState::attach(std::istream* pIn)
+<button class="buttonClass" id="btn123456789101112" onclick="expandAndCollapse(123456789101112, id)">-</button><div class="buttonClass" id="123456789101112">{
+  _pContext-&gt;_pState = _pContext-&gt;_pEatWhitespace;
+  _pContext-&gt;_lineCount = 0;
+  _pContext-&gt;_pIn = pIn;
+}</div>
+//----&lt; replace one and two char tokens &gt;----------------------------
+
+void ConsumeState::setSpecialTokens(const std::string&amp; commaSeparatedTokens)
+<button class="buttonClass" id="btn12345678910111213" onclick="expandAndCollapse(12345678910111213, id)">-</button><div class="buttonClass" id="12345678910111213">{
+  std::vector&lt;Token&gt; result = Utilities::StringHelper::split(commaSeparatedTokens);
+  _pContext-&gt;_oneCharTokens.clear();
+  _pContext-&gt;_twoCharTokens.clear();
+  for (std::string item : result)
+  <button class="buttonClass" id="btn1234567891011121314" onclick="expandAndCollapse(1234567891011121314, id)">-</button><div class="buttonClass" id="1234567891011121314">{
+    if (item.size() == 1 || item == "\n")
+      _pContext-&gt;_oneCharTokens.push_back(item);
+    if (item.size() &gt;= 2)
+      _pContext-&gt;_twoCharTokens.push_back(item);
+  }</div>
+}</div>
+//----&lt; return number of newlines collected from stream &gt;------------
+
+size_t ConsumeState::currentLineCount() <button class="buttonClass" id="btn123456789101112131415" onclick="expandAndCollapse(123456789101112131415, id)">-</button><div class="buttonClass" id="123456789101112131415">{ return _pContext-&gt;_lineCount; }</div>
+
+//----&lt; collect character from stream &gt;------------------------------
+
+bool ConsumeState::collectChar()
+<button class="buttonClass" id="btn12345678910111213141516" onclick="expandAndCollapse(12345678910111213141516, id)">-</button><div class="buttonClass" id="12345678910111213141516">{
+  if (_pContext-&gt;_pIn-&gt;good())
+  <button class="buttonClass" id="btn1234567891011121314151617" onclick="expandAndCollapse(1234567891011121314151617, id)">-</button><div class="buttonClass" id="1234567891011121314151617">{
+    _pContext-&gt;prevChar = _pContext-&gt;currChar;
+    _pContext-&gt;currChar = _pContext-&gt;_pIn-&gt;get();
+    if (_pContext-&gt;currChar == '\n')
+      ++(_pContext-&gt;_lineCount);
+    return true;
+  }</div>
+  return false;
+}</div>
+
+//----&lt; logs to console if TEST_LOG is defined &gt;---------------------
+
+void testLog(const std::string&amp; msg);  // forward declaration
+
+//----&lt; turn on\off returning comments as tokens &gt;-------------------
+
+void ConsumeState::returnComments(bool doReturnComments)
+<button class="buttonClass" id="btn123456789101112131415161718" onclick="expandAndCollapse(123456789101112131415161718, id)">-</button><div class="buttonClass" id="123456789101112131415161718">{
+  _pContext-&gt;_doReturnComments = doReturnComments;
+}</div>
+//----&lt; is tok one of the special one character tokens? &gt;------------
+
+bool ConsumeState::isOneCharToken(Token tok)
+<button class="buttonClass" id="btn12345678910111213141516171819" onclick="expandAndCollapse(12345678910111213141516171819, id)">-</button><div class="buttonClass" id="12345678910111213141516171819">{
+  for (size_t i = 0; i &lt; _pContext-&gt;_oneCharTokens.size(); ++i)
+    if (_pContext-&gt;_oneCharTokens[i] == tok)
+      return true;
+  return false;
+}</div>
+//----&lt; is tok one of the special two character tokens? &gt;------------
+
+bool ConsumeState::isTwoCharToken(Token tok)
+<button class="buttonClass" id="btn1234567891011121314151617181920" onclick="expandAndCollapse(1234567891011121314151617181920, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920">{
+  for (size_t i = 0; i &lt; _pContext-&gt;_twoCharTokens.size(); ++i)
+    if (_pContext-&gt;_twoCharTokens[i] == tok)
+      return true;
+  return false;
+}</div>
+//----&lt; make a string with this one integer &gt;------------------------
+
+ConsumeState::Token ConsumeState::makeString(int ch)
+<button class="buttonClass" id="btn123456789101112131415161718192021" onclick="expandAndCollapse(123456789101112131415161718192021, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021">{
+  Token temp;
+  return temp += ch;
+}</div>
+//----&lt; decide which state to use next &gt;-----------------------------
+
+ConsumeState* ConsumeState::nextState()
+<button class="buttonClass" id="btn12345678910111213141516171819202122" onclick="expandAndCollapse(12345678910111213141516171819202122, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122">{
+  std::locale loc;
+
+  if (!(_pContext-&gt;_pIn-&gt;good()))
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223" onclick="expandAndCollapse(1234567891011121314151617181920212223, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223">{
+    return nullptr;
+  }</div>
+  int chNext = _pContext-&gt;_pIn-&gt;peek();
+  if (chNext == EOF)
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324" onclick="expandAndCollapse(123456789101112131415161718192021222324, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324">{
+    _pContext-&gt;_pIn-&gt;clear();
+    // if peek() reads end of file character, EOF, then eofbit is set and
+    // _pIn-&gt;good() will return false.  clear() restores state to good
+  }</div>
+  //---------------------------------------------------------
+  // The following tests must come first
+
+  if (_pContext-&gt;currChar == '\"' &amp;&amp; _pContext-&gt;prevChar != '\\')
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425" onclick="expandAndCollapse(12345678910111213141516171819202122232425, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425">{
+    testLog("state: eatDQString");
+    return _pContext-&gt;_pEatDQString;
+  }</div>
+  if (_pContext-&gt;currChar == '\'' &amp;&amp; _pContext-&gt;prevChar != '\\')
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526" onclick="expandAndCollapse(1234567891011121314151617181920212223242526, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526">{
+    testLog("state: eatSQString");
+    return _pContext-&gt;_pEatSQString;
+  }</div>
+  if (_pContext-&gt;currChar == '/' &amp;&amp; chNext == '/')
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627" onclick="expandAndCollapse(123456789101112131415161718192021222324252627, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627">{
+    testLog("state: eatCppComment");
+    return _pContext-&gt;_pEatCppComment;
+  }</div>
+  if (_pContext-&gt;currChar == '/' &amp;&amp; chNext == '*')
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728">{
+    testLog("state: eatCComment");
+    return _pContext-&gt;_pEatCComment;
+  }</div>
+  if (_pContext-&gt;currChar == 'R' &amp;&amp; chNext == '\"')
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829">{
+    testLog("state: eatRawCppString");
+    return _pContext-&gt;_pEatRawCppString;
+  }</div>
+  if (_pContext-&gt;currChar == '@' &amp;&amp; chNext == '\"')
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930">{
+    testLog("state: eatRawCSharpString");
+    return _pContext-&gt;_pEatRawCSharpString;
+  }</div>
+  //---------------------------------------------------------
+  // The following tests must come after those above
+
+  if (isOneCharToken(makeString(_pContext-&gt;currChar)))
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031">{
+    testLog("state: eatSpecialCharacters");
+    return _pContext-&gt;_pEatSpecialCharacters;
+  }</div>
+  if (std::isspace(_pContext-&gt;currChar, loc) &amp;&amp; _pContext-&gt;currChar != '\n')
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132">{
+    testLog("state: eatWhitespace");
+    return _pContext-&gt;_pEatWhitespace;
+  }</div>
+  if (std::isalnum(_pContext-&gt;currChar, loc) || _pContext-&gt;currChar == '_')
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233">{
+    testLog("state: eatAlphanum");
+    return _pContext-&gt;_pEatAlphanum;
+  }</div>
+  if (ispunct(_pContext-&gt;currChar))
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334">{
+    testLog("state: eatPunctuator");
+    return _pContext-&gt;_pEatPunctuator;
+  }</div>
+  if (!_pContext-&gt;_pIn-&gt;good())
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435">{
+    testLog("state: eatWhitespace");
+    return _pContext-&gt;_pEatWhitespace;
+  }</div>
+  //---------------------------------------------------------
+  // If _pContext-&gt;currChar is not a state transition char
+  // then we go to eatPuctuator state
+
+  return _pContext-&gt;_pEatPunctuator;
+}</div>
+//----&lt; class that consumes whitespace &gt;-----------------------------
+
+class EatWhitespace : public ConsumeState
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536">{
+public:
+  EatWhitespace(Context* pContext)
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637">{
+    _pContext = pContext;
+  }</div>
+  virtual void eatChars()
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738">{
+    std::locale loc;
+    _pContext-&gt;token.clear();
+    do <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839">{
+      if (!collectChar())
+        return;
+    }</div> while (std::isspace(_pContext-&gt;currChar, loc) &amp;&amp; _pContext-&gt;currChar != '\n');
+  }</div>
+}</div>;
+//----&lt; class that consumes C++ comment &gt;----------------------------
+
+class EatCppComment : public ConsumeState
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940">{
+public:
+  EatCppComment(Context* pContext)
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041">{
+    _pContext = pContext;
+  }</div>
+  virtual void eatChars()
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142">{
+    _pContext-&gt;token.clear();
+    do <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243">{
+      if (_pContext-&gt;_doReturnComments)
+        _pContext-&gt;token += _pContext-&gt;currChar;
+      if (!collectChar())
+        return;
+    }</div> while (_pContext-&gt;currChar != '\n');
+  }</div>
+}</div>;
+//----&lt; class that consumes C comment &gt;------------------------------
+
+class EatCComment : public ConsumeState
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344">{
+public:
+  EatCComment(Context* pContext)
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445">{
+    _pContext = pContext;
+  }</div>
+  virtual void eatChars()
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546">{
+    _pContext-&gt;token.clear();
+    do <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647">{
+      if (_pContext-&gt;_doReturnComments)
+        _pContext-&gt;token += _pContext-&gt;currChar;
+      if (!collectChar())
+        return;
+    }</div> while (_pContext-&gt;currChar != '*' || _pContext-&gt;_pIn-&gt;peek() != '/');
+    if (_pContext-&gt;_doReturnComments)
+      _pContext-&gt;token += _pContext-&gt;currChar;
+    if (!collectChar())      // get terminating '/'
+      return;
+    if (_pContext-&gt;_doReturnComments)
+      _pContext-&gt;token += _pContext-&gt;currChar;
+    collectChar();           // get first non-comment char
+  }</div>
+}</div>;
+//----&lt; class that eats punctuators &gt;--------------------------------
+
+class EatPunctuator : public ConsumeState
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748">{
+public:
+  EatPunctuator(Context* pContext)
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849">{
+    _pContext = pContext;
+  }</div>
+  virtual void eatChars()
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950">{
+    _pContext-&gt;token.clear();
+    int chNext = _pContext-&gt;_pIn-&gt;peek();
+    do <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051">{
+      if (_pContext-&gt;currChar == '\"' &amp;&amp; _pContext-&gt;prevChar != '\\')    // start of double quoted string
+      <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152">{
+        return;
+      }</div>
+      if (_pContext-&gt;currChar == '@' &amp;&amp; chNext == '\"')    // start of raw C# double quoted string
+      <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253">{
+        return;
+      }</div>
+      if (_pContext-&gt;currChar == '\'' &amp;&amp; _pContext-&gt;prevChar != '\\')    // start of single quoted string
+      <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354">{
+        return;
+      }</div>
+      Token temp = makeString(_pContext-&gt;currChar);
+      if (isOneCharToken(temp))
+      <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455">{
+        return;
+      }</div>
+      _pContext-&gt;token += _pContext-&gt;currChar;
+      if (!_pContext-&gt;_pIn-&gt;good())  // end of stream
+      <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556">{
+        return;
+      }</div>
+      if (!collectChar())
+        return;
+    }</div> while (ispunct(_pContext-&gt;currChar));
+  }</div>
+}</div>;
+//----&lt; class that eats alphanumeric characters &gt;--------------------
+/*
+ * treats underscore '_' as alphanumeric character
+ */
+class EatAlphanum : public ConsumeState
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657">{
+public:
+  EatAlphanum(Context* pContext)
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758">{
+    _pContext = pContext;
+  }</div>
+  virtual void eatChars()
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859">{
+    _pContext-&gt;token.clear();
+    int chNext = _pContext-&gt;_pIn-&gt;peek();
+    do <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960">{
+      _pContext-&gt;token += _pContext-&gt;currChar;
+      if (!collectChar())
+        return;
+    }</div> while (isalnum(_pContext-&gt;currChar) || _pContext-&gt;currChar == '_');
+  }</div>
+}</div>;
+//----&lt; class that eats one and two character tokens &gt;---------------
+
+class EatSpecialCharacters : public ConsumeState
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061">{
+public:
+  EatSpecialCharacters(Context* pContext)
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162">{
+    _pContext = pContext;
+  }</div>
+  virtual void eatChars()
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263">{
+    _pContext-&gt;token.clear();
+    _pContext-&gt;token += _pContext-&gt;currChar;
+    Token temp = makeString(_pContext-&gt;currChar) += _pContext-&gt;_pIn-&gt;peek();
+    if (isTwoCharToken(temp))
+    <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364">{
+      collectChar();
+      _pContext-&gt;token += _pContext-&gt;currChar;
+    }</div>
+    collectChar();
+  }</div>
+}</div>;
+//----&lt; class that eats double quoted string &gt;-----------------------
+
+bool isEscapted(std::string tok)
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465">{
+  size_t backSlashCount = 0;
+  for (size_t i = tok.size() - 1; i &gt;= 0; --i)
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566">{
+    if (tok[i] == '\\')
+      ++backSlashCount;
+    else break;
+  }</div>
+  return (backSlashCount % 2 == 1);
+}</div>
+//----&lt; class that eats double quoted string &gt;-----------------------
+
+class EatDQString : public ConsumeState
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667">{
+public:
+  EatDQString(Context* pContext)
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768">{
+    _pContext = pContext;
+  }</div>
+  virtual void eatChars()
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869">{
+    _pContext-&gt;token.clear();
+    do
+    <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970">{
+      _pContext-&gt;token += _pContext-&gt;currChar;
+      if (!collectChar())
+        return;
+    }</div> while (_pContext-&gt;currChar != '\"' || isEscapted(_pContext-&gt;token));
+    _pContext-&gt;token += _pContext-&gt;currChar;
+    _pContext-&gt;inCSharpString = false;
+    collectChar();
+  }</div>
+}</div>;
+//----&lt; class that eats double quoted string &gt;-----------------------
+
+class EatRawCppString : public ConsumeState
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071">{
+public:
+  EatRawCppString(Context* pContext)
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172">{
+    _pContext = pContext;
+  }</div>
+  virtual void eatChars()
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273">{
+    _pContext-&gt;token.clear();
+    do
+    <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374">{
+      _pContext-&gt;token += _pContext-&gt;currChar;
+      if (!collectChar())
+        return;
+    }</div> while (_pContext-&gt;currChar != '\"' || _pContext-&gt;prevChar == 'R');
+    _pContext-&gt;token += _pContext-&gt;currChar;
+    collectChar();
+  }</div>
+}</div>;
+//----&lt; class that eats double quoted string &gt;-----------------------
+
+class EatRawCSharpString : public ConsumeState
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475">{
+public:
+  EatRawCSharpString(Context* pContext)
+  <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576">{
+    _pContext = pContext;
+  }</div>
+  virtual void eatChars()
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677">{
+    _pContext-&gt;token.clear();
+    do
+    <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778">{
+      _pContext-&gt;token += _pContext-&gt;currChar;
+      if (!collectChar())
+        return;
+    }</div> while (_pContext-&gt;currChar != '\"' || _pContext-&gt;prevChar == '@');
+    _pContext-&gt;token += _pContext-&gt;currChar;
+    collectChar();
+  }</div>
+}</div>;
+//----&lt; class that eats single quoted string &gt;-----------------------
+
+class EatSQString : public ConsumeState
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879">{
+public:
+  EatSQString(Context* pContext)
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980">{
+    _pContext = pContext;
+  }</div>
+  virtual void eatChars()
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081">{
+    _pContext-&gt;token.clear();
+    do
+    <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182">{
+      _pContext-&gt;token += _pContext-&gt;currChar;
+      if (!collectChar())
+        return;
+    }</div> while (_pContext-&gt;currChar != '\'' || isEscapted(_pContext-&gt;token));
+    _pContext-&gt;token += _pContext-&gt;currChar;
+    collectChar();
+  }</div>
+}</div>;
+//----&lt; construct shared data storage &gt;------------------------------
+
+Context::Context()
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283">{
+  _pEatAlphanum = new EatAlphanum(this);
+  _pEatCComment = new EatCComment(this);
+  _pEatCppComment = new EatCppComment(this);
+  _pEatPunctuator = new EatPunctuator(this);
+  _pEatWhitespace = new EatWhitespace(this);
+  _pEatSpecialCharacters = new EatSpecialCharacters(this);
+  _pEatDQString = new EatDQString(this);
+  _pEatRawCppString = new EatRawCppString(this);
+  _pEatRawCSharpString = new EatRawCSharpString(this);
+  _pEatSQString = new EatSQString(this);
+  _pState = _pEatWhitespace;
+  _lineCount = 0;
+  _doReturnComments = false;
+}</div>
+//----&lt; return shared resources &gt;------------------------------------
+
+Context::~Context()
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384">{
+  delete _pEatAlphanum;
+  delete _pEatCComment;
+  delete _pEatCppComment;
+  delete _pEatPunctuator;
+  delete _pEatWhitespace;
+  delete _pEatSpecialCharacters;
+  delete _pEatDQString;
+  delete _pEatRawCppString;
+  delete _pEatRawCSharpString;
+  delete _pEatSQString;
+}</div>
+//----&lt; no longer has anything to do - will be removed &gt;-------------
+
+ConsumeState::ConsumeState() <button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485">{}</div>
+
+//----&lt; no longer has anything to do - will be removed &gt;-------------
+
+ConsumeState::~ConsumeState() <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586">{}</div>
+
+//----&lt; construct toker starting in state EatWhitespace &gt;------------
+
+Toker::Toker()
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687">{
+  _pContext = new Context();
+  pConsumer = _pContext-&gt;_pEatWhitespace;
+  pConsumer-&gt;setContext(_pContext);
+}</div>
+
+//----&lt; destructor deletes the current state &gt;-----------------------
+/*
+ * deleting any state deletes them all since derived destructor
+ * implicitly invokes the base destructor
+ */
+Toker::~Toker() 
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788">{
+  delete _pContext;
+  _pContext = nullptr;
+}</div>
+
+//----&lt; attach tokenizer to stream &gt;---------------------------------
+/*
+ * stream can be either a std::fstream or std::stringstream
+ */
+bool Toker::attach(std::istream* pIn)
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889">{
+  if (pIn != nullptr &amp;&amp; pIn-&gt;good())
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990">{
+    pConsumer-&gt;attach(pIn);
+    //_pContext-&gt;_pIn = pIn;
+    return true;
+  }</div>
+  return false;
+}</div>
+//----&lt; collect token generated by ConsumeState &gt;--------------------
+
+std::string Toker::getTok()
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091">{
+  while(true) 
+  <button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192">{
+    if (!pConsumer-&gt;canRead())
+      return "";
+    pConsumer-&gt;consumeChars();
+    if (pConsumer-&gt;hasTok())
+      break;
+  }</div>
+  return pConsumer-&gt;getTok();
+}</div>
+//----&lt; has toker reached the end of its stream? &gt;-------------------
+
+bool Toker::canRead() <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293">{ return pConsumer-&gt;canRead(); }</div>
+
+//----&lt; start/stop returning comments as tokens &gt;--------------------
+
+void Toker::returnComments(bool doReturnComments)
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394">{
+  pConsumer-&gt;returnComments(doReturnComments);
+}</div>
+//----&lt; is this token a comment? &gt;-----------------------------------
+
+bool Toker::isComment(const std::string&amp; tok)
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495">{
+  if (tok.find("//") &lt; tok.size() || tok.find("/*") &lt; tok.size())
+    return true;
+  return false;
+}</div>
+//----&lt; return number of newlines pulled from stream &gt;---------------
+
+size_t Toker::currentLineCount()
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596">{
+  return pConsumer-&gt;currentLineCount();
+}</div>
+//----&lt; set one and two char tokens &gt;--------------------------------
+
+void Toker::setSpecialTokens(const std::string&amp; commaSeparatedTokens)
+<button class="buttonClass" id="btn12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394959697" onclick="expandAndCollapse(12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394959697, id)">-</button><div class="buttonClass" id="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394959697">{
+  pConsumer-&gt;setSpecialTokens(commaSeparatedTokens);
+}</div>
+//----&lt; debugging output to console if TEST_LOG is #defined &gt;--------
+
+void testLog(const std::string&amp; msg)
+<button class="buttonClass" id="btn1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495969798" onclick="expandAndCollapse(1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495969798, id)">-</button><div class="buttonClass" id="1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495969798">{
+#ifdef TEST_LOG
+  std::cout &lt;&lt; "\n  " &lt;&lt; msg;
+#endif
+}</div>
+
+//----&lt; test stub &gt;--------------------------------------------------
+
+using Helper = Utilities::StringHelper;
+using namespace Utilities;
+
+#ifdef TEST_TOKENIZER
+
+#include &lt;fstream&gt;
+#include &lt;exception&gt;
+
+
+int main()
+<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899">{
+  Helper::Title("Testing Tokenizer");
+
+  //std::string fileSpec = "../Tokenizer/Tokenizer.cpp";
+  //std::string fileSpec = "../Tokenizer/Tokenizer.h";
+  std::string fileSpec = "../Tokenizer/Test.txt";
+  //std::string fileSpec = "../SemiExp/SemiExp.h";
+  try
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100">{
+    std::ifstream in(fileSpec);
+    if (!in.good())
+    <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101">{
+      std::cout &lt;&lt; "\n  can't open " &lt;&lt; fileSpec &lt;&lt; "\n\n";
+      return 1;
+    }</div>
+
+    <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102">{
+      Toker toker;
+      toker.returnComments();
+      toker.attach(&amp;in);
+      std::cout &lt;&lt; "\n  current line count = " &lt;&lt; toker.currentLineCount();
+      do
+      <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103">{
+        std::string tok = toker.getTok();
+        if (tok == "\n")
+          tok = "newline";
+        std::cout &lt;&lt; "\n -- " &lt;&lt; tok;
+      }</div> while (in.good());
+      std::cout &lt;&lt; "\n  current line count = " &lt;&lt; toker.currentLineCount();
+    }</div>
+ 
+    putline();
+    Helper::title("Testing change of special characters");
+    std::string newSpecialChars = "., :, +, +=, \n <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104">{ }</div>";
+
+    Toker toker;
+    toker.returnComments();
+    toker.setSpecialTokens(newSpecialChars);
+    in.clear();
+
+    in.seekg(std::ios::beg);
+    toker.attach(&amp;in);
+    std::cout &lt;&lt; "\n  new special tokens: " &lt;&lt; newSpecialChars;
+    do
+    <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105">{
+      std::string tok = toker.getTok();
+      if (tok == "\n")
+        tok = "newline";
+      std::cout &lt;&lt; "\n -- " &lt;&lt; tok;
+    }</div> while (in.good());
+    std::cout &lt;&lt; "\n  current line count = " &lt;&lt; toker.currentLineCount() &lt;&lt; "\n";
+
+    //Helper::title("Testing re-attach:");
+    //std::string path = "../Tokenizer/Tokenizer.h";
+    //std::ifstream inAgain(path);
+    //if (inAgain.good())
+    //<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106">{
+    //  toker.attach(&amp;inAgain);
+    //  do
+    //  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107">{
+    //    std::string tok = toker.getTok();
+    //    if (tok == "\n")
+    //      tok = "newline";
+    //    std::cout &lt;&lt; "\n -- " &lt;&lt; tok;
+    //  }</div> while (inAgain.good());
+    //  std::cout &lt;&lt; "\n  current line count = " &lt;&lt; toker.currentLineCount();
+    //}</div>
+    //else
+    //<button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108">{
+    //  std::cout &lt;&lt; "\n  can't attach to " &lt;&lt; path &lt;&lt; "\n";
+    //}</div>
+  }</div>
+  catch (std::logic_error&amp; ex)
+  <button class="buttonClass" id="btn123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109" onclick="expandAndCollapse(123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109, id)">-</button><div class="buttonClass" id="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109">{
+    std::cout &lt;&lt; "\n  " &lt;&lt; ex.what();
+  }</div>
+  std::cout &lt;&lt; "\n\n";
+  return 0;
+}</div>
+#endif
+
+</pre>
+</body> 
+</html> 

@@ -1,0 +1,56 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<link href=1.StyleSheet.css rel="stylesheet" type="text/css"/> 
+<script  type="text/javascript" src=2.JavaScript.js></script></head> 
+<body> 
+<div id="titleHeader"> 
+<h1>Code Files with Dependencies</h1><div id="menuBar"> 
+<h3> Dependencies </h3></div> 
+<pre id="matter">
+#pragma once
+/////////////////////////////////////////////////////////////////////
+// IFileMgr.h - interface for finding files matching specified     //
+//              patterns on a specified path                       //
+// ver 3.0                                                         //
+// Jim Fawcett, MidtermCodeSupplement, Spring 2016                 //
+/////////////////////////////////////////////////////////////////////
+
+#include &lt;string&gt;
+
+namespace FileManager
+<button class="buttonClass" id="btn1" onclick="expandAndCollapse(1, id)">-</button><div class="buttonClass" id="1">{
+  struct IFileEventHandler
+  <button class="buttonClass" id="btn12" onclick="expandAndCollapse(12, id)">-</button><div class="buttonClass" id="12">{
+    virtual void execute(const std::string&amp; fileSpec) = 0;
+  }</div>;
+
+  struct IDirEventHandler
+  <button class="buttonClass" id="btn123" onclick="expandAndCollapse(123, id)">-</button><div class="buttonClass" id="123">{
+    virtual void execute(const std::string&amp; dirSpec) = 0;
+  }</div>;
+
+  struct IDoneEventHandler
+  <button class="buttonClass" id="btn1234" onclick="expandAndCollapse(1234, id)">-</button><div class="buttonClass" id="1234">{
+    virtual void execute(size_t numFilesProcessed) = 0;
+  }</div>;
+
+  struct IFileMgr
+  <button class="buttonClass" id="btn12345" onclick="expandAndCollapse(12345, id)">-</button><div class="buttonClass" id="12345">{
+    virtual ~IFileMgr() <button class="buttonClass" id="btn123456" onclick="expandAndCollapse(123456, id)">-</button><div class="buttonClass" id="123456">{}</div>
+    virtual void addPattern(const std::string&amp; patt) = 0;
+    virtual void search() = 0;
+    virtual void find(const std::string&amp; path) = 0;
+    virtual void regForFiles(IFileEventHandler* pEventHandler) = 0;
+    virtual void regForDirs(IDirEventHandler* pEventHandler) = 0;
+    virtual void regForDone(IDoneEventHandler* pEventHandler) = 0;
+    static IFileMgr* getInstance();
+  }</div>;
+
+  struct FileMgrFactory
+  <button class="buttonClass" id="btn1234567" onclick="expandAndCollapse(1234567, id)">-</button><div class="buttonClass" id="1234567">{
+    static IFileMgr* create(const std::string&amp; path);
+  }</div>;
+}</div>}</div></pre>
+</body> 
+</html> 

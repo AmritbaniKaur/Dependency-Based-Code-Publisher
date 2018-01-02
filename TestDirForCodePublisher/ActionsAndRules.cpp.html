@@ -1,0 +1,76 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<link href=1.StyleSheet.css rel="stylesheet" type="text/css"/> 
+<script  type="text/javascript" src=2.JavaScript.js></script></head> 
+<body> 
+<div id="titleHeader"> 
+<h1>Code Files with Dependencies</h1><div id="menuBar"> 
+<h3> Dependencies </h3><a href = "ActionsAndRules.h.html">ActionsAndRules.h</a><br/><a href = "Utilities.h.html">Utilities.h</a><br/><a href = "ActionsAndRules.h.html">ActionsAndRules.h</a><br/><a href = "Tokenizer.h.html">Tokenizer.h</a><br/><a href = "SemiExpression.h.html">SemiExpression.h</a><br/></div> 
+<pre id="matter">
+/////////////////////////////////////////////////////////////////////
+//  ActionsAndRules.cpp - implements new parsing rules and actions //
+//  ver 3.3                                                        //
+//  Language:      Visual C++ 2008, SP1                            //
+//  Platform:      Dell Precision T7400, Vista Ultimate SP1        //
+//  Application:   Prototype for CSE687 Pr1, Sp09                  //
+//  Author:        Jim Fawcett, CST 4-187, Syracuse University     //
+//                 (315) 443-3948, jfawcett@twcny.rr.com           //
+/////////////////////////////////////////////////////////////////////
+
+#include "ActionsAndRules.h"
+#include "../Utilities/Utilities.h"
+
+using namespace CodeAnalysis;
+
+Repository* Repository::instance;
+
+#ifdef TEST_ACTIONSANDRULES
+
+#include &lt;iostream&gt;
+#include "ActionsAndRules.h"
+#include "Tokenizer.h"
+#include "SemiExpression.h"
+
+int main(int argc, char* argv[])
+<button class="buttonClass" id="btn1" onclick="expandAndCollapse(1, id)">-</button><div class="buttonClass" id="1">{
+  std::cout &lt;&lt; "\n  Testing ActionsAndRules class\n "
+            &lt;&lt; std::string(30,'=') &lt;&lt; std::endl;
+
+  try
+  <button class="buttonClass" id="btn12" onclick="expandAndCollapse(12, id)">-</button><div class="buttonClass" id="12">{
+    Utilities::StringHelpers::Title(
+      "Actions and Rules - these construction tests are no longer valid"
+    );
+    //PreprocStatement pps;
+    //pps.addAction(&amp;ppq);
+
+    //FunctionDefinition fnd;
+    //PrettyPrintToQ pprtQ(resultsQ);
+    //fnd.addAction(&amp;pprtQ);
+
+    //Toker toker("../ActionsAndRules.h");
+    //SemiExp se(&amp;toker);
+    //Parser parser(&amp;se);
+    //parser.addRule(&amp;pps);
+    //parser.addRule(&amp;fnd);
+    //while(se.get())
+    //  parser.parse();
+    //size_t len = resultsQ.size();
+    //for(size_t i=0; i&lt;len; ++i)
+    //<button class="buttonClass" id="btn123" onclick="expandAndCollapse(123, id)">-</button><div class="buttonClass" id="123">{
+    //  std::cout &lt;&lt; "\n  " &lt;&lt; resultsQ.front().c_str();
+    //  resultsQ.pop();
+    //}</div>
+    std::cout &lt;&lt; "\n\n";
+  }</div>
+  catch(std::exception&amp; ex)
+  <button class="buttonClass" id="btn1234" onclick="expandAndCollapse(1234, id)">-</button><div class="buttonClass" id="1234">{
+    std::cout &lt;&lt; "\n\n  " &lt;&lt; ex.what() &lt;&lt; "\n\n";
+  }</div>
+}</div>
+#endif
+
+</pre>
+</body> 
+</html> 
